@@ -114,7 +114,7 @@
   .word-count{font-size:13px;color:var(--ash-dim);letter-spacing:0.5px;}
   .score-live{font-family:var(--font-mono);font-weight:700;font-size:16px;color:var(--ember-gold);}
   .heat-track{height:8px;border-radius:999px;background:var(--iron);overflow:hidden;margin-bottom:22px;}
-  .heat-fill{height:100%;border-radius:999px;background:linear-gradient(90deg, var(--ember-gold), var(--ember));transition:width 1s linear, background .3s ease;}
+  .heat-fill{height:100%;border-radius:999px;background:linear-gradient(90deg, var(--ember-gold), var(--ember));transition:width 0.2s linear, background .3s ease;}
   .heat-fill.low{background:linear-gradient(90deg, var(--danger), var(--ember));}
 
   .tiles{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:20px;min-height:56px;}
@@ -633,17 +633,25 @@
 
   function startTimer(){
     if(state.timerId) clearInterval(state.timerId);
-    state.timerId = setInterval(()=>{
-      if(state.paused) return;
-      state.timeLeft -= 1;
-      renderHeat();
-      if(state.timeLeft <= 0){
-        state.timeLeft = 0;
-        renderHeat();
-        endGame(false);
-      }
-    }, 1000);
+    state.endsAt = Date.now() + state.timeLeft * 1000;
+    state.timerId = setInterval(tickTimer, 200);
   }
+
+  function tickTimer(){
+    if(!state || state.paused) return;
+    const remainingMs = state.endsAt - Date.now();
+    state.timeLeft = Math.max(0, Math.ceil(remainingMs / 1000));
+    renderHeat();
+    if(remainingMs <= 0){
+      state.timeLeft = 0;
+      renderHeat();
+      endGame(false);
+    }
+  }
+
+  document.addEventListener('visibilitychange', ()=>{
+    if(document.visibilityState === 'visible') tickTimer();
+  });
 
   function renderHeat(){
     const pct = Math.max(0, Math.min(100, (state.timeLeft / GAME_TIME) * 100));
@@ -769,7 +777,8 @@
       state.score += base;
       state.solvedCount += 1;
       if(state.mode !== 'relax'){
-        state.timeLeft += TIME_BONUS;
+        state.endsAt += TIME_BONUS * 1000;
+        state.timeLeft = Math.max(0, Math.ceil((state.endsAt - Date.now()) / 1000));
         renderHeat();
       }
       el('scoreLive').textContent = `${state.score} pts`;
@@ -785,7 +794,8 @@
     } else {
       wrap.classList.add('wrong');
       if(state.mode !== 'relax'){
-        state.timeLeft = Math.max(0, state.timeLeft - WRONG_PENALTY);
+        state.endsAt -= WRONG_PENALTY * 1000;
+        state.timeLeft = Math.max(0, Math.ceil((state.endsAt - Date.now()) / 1000));
         renderHeat();
       }
       setTimeout(()=>{
@@ -880,9 +890,14 @@
   function pauseGame(){
     if(!state) return;
     state.paused = true;
+    state.pausedAt = Date.now();
     el('pauseOverlay').classList.remove('hidden');
   }
   function resumeGame(){
+    if(state.pausedAt && state.mode !== 'relax' && state.endsAt){
+      state.endsAt += Date.now() - state.pausedAt;
+    }
+    state.pausedAt = null;
     state.paused = false;
     el('pauseOverlay').classList.add('hidden');
   }
