@@ -218,6 +218,7 @@
 
       <div class="lesson-tabs" id="diffTabs"></div>
       <div class="lesson-tabs" id="lessonTabs"></div>
+      <div class="lesson-tabs" id="caseTabs"></div>
 
       <div class="setting-row hidden" id="freeControls" style="flex-direction:column;align-items:stretch;gap:12px;">
         <div style="display:flex;align-items:center;justify-content:space-between;">
@@ -603,6 +604,11 @@
   const LESSON_KEY = 'wordforge_vocab_lesson_v1';
   const DIFF_KEY = 'wordforge_vocab_difficulty_v1';
   const FREE_DISPLAY_KEY = 'wordforge_vocab_free_display_v1';
+  const CASE_KEY = 'wordforge_vocab_case_v1';
+  const CASE_OPTIONS = [
+    { key:'upper', label:'대문자' },
+    { key:'lower', label:'소문자' }
+  ];
   const LOCAL_LEADERBOARD_KEY = 'wordforge_vocab_leaderboard_local_v1';
 
   /* ---------------------------------------------------------------------
@@ -653,6 +659,30 @@
 
   let selectedFreeDisplay = localStorage.getItem(FREE_DISPLAY_KEY) || 'meaning';
   if(!FREE_DISPLAY_OPTIONS.some(o=>o.key === selectedFreeDisplay)) selectedFreeDisplay = 'meaning';
+
+  let selectedCase = localStorage.getItem(CASE_KEY) || 'upper';
+  if(!CASE_OPTIONS.some(o=>o.key === selectedCase)) selectedCase = 'upper';
+
+  function applyCase(str){
+    return selectedCase === 'lower' ? str.toLowerCase() : str.toUpperCase();
+  }
+
+  function renderCaseTabs(){
+    const wrap = el('caseTabs');
+    wrap.innerHTML = '';
+    CASE_OPTIONS.forEach(o=>{
+      const btn = document.createElement('button');
+      btn.className = 'lesson-tab' + (o.key === selectedCase ? ' active' : '');
+      btn.innerHTML = `<span class="name">${o.label}</span>`;
+      btn.addEventListener('click', ()=>{
+        selectedCase = o.key;
+        localStorage.setItem(CASE_KEY, o.key);
+        renderCaseTabs();
+        if(state){ renderTiles(); renderSlots(); }
+      });
+      wrap.appendChild(btn);
+    });
+  }
 
   function renderDiffTabs(){
     const wrap = el('diffTabs');
@@ -715,6 +745,7 @@
     renderDiffTabs();
     renderFreeDisplayTabs();
     renderLessonTabs();
+    renderCaseTabs();
     const total = currentLessonWords().length;
     const isFree = selectedDifficulty === 'free';
 
@@ -898,7 +929,7 @@
     state.tiles.forEach(t=>{
       const b = document.createElement('button');
       b.className = 'tile' + (t.used ? ' used' : '');
-      b.textContent = t.letter.toUpperCase();
+      b.textContent = applyCase(t.letter);
       b.disabled = t.used;
       b.addEventListener('click', ()=>placeTile(t.id));
       wrap.appendChild(b);
@@ -919,7 +950,7 @@
     state.slots.forEach((s, i)=>{
       const d = document.createElement('div');
       d.className = 'slot' + (s.value ? ' filled' : '') + (gapAfter.has(i) ? ' group-gap' : '');
-      d.textContent = s.value ? s.value.toUpperCase() : '';
+      d.textContent = s.value ? applyCase(s.value) : '';
       d.addEventListener('click', ()=>{ if(s.value) removeSlotBack(s); });
       wrap.appendChild(d);
     });
