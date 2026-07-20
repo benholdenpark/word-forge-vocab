@@ -953,6 +953,44 @@
     if(state.slots.every(s=>s.value !== null)) checkAnswer();
   }
 
+  /* ---------------------------------------------------------------------
+     Sound effects (synthesized tones via Web Audio API — no audio files)
+  --------------------------------------------------------------------- */
+  let audioCtx = null;
+  function getAudioCtx(){
+    if(!audioCtx){
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if(!Ctx) return null;
+      audioCtx = new Ctx();
+    }
+    if(audioCtx.state === 'suspended') audioCtx.resume();
+    return audioCtx;
+  }
+  function playTone(freq, duration, type, delay, peakGain){
+    const ctx = getAudioCtx();
+    if(!ctx) return;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = type || 'sine';
+    osc.frequency.value = freq;
+    const startAt = ctx.currentTime + (delay || 0);
+    gain.gain.setValueAtTime(0.0001, startAt);
+    gain.gain.exponentialRampToValueAtTime(peakGain || 0.15, startAt + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, startAt + duration);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(startAt);
+    osc.stop(startAt + duration + 0.02);
+  }
+  function playCorrectSound(){
+    playTone(659.25, 0.11, 'sine', 0, 0.14);
+    playTone(880.00, 0.16, 'sine', 0.09, 0.14);
+  }
+  function playWrongSound(){
+    playTone(220, 0.09, 'square', 0, 0.10);
+    playTone(160, 0.16, 'square', 0.08, 0.10);
+  }
+
   function checkAnswer(){
     const assembled = state.slots.map(s=>s.value).join('').toLowerCase();
     const entry = state.words[state.wordIdx];
@@ -960,6 +998,7 @@
     const wrap = el('slots');
     if(assembled === target){
       wrap.classList.add('correct');
+      playCorrectSound();
       const status = (state.revealsUsedThisWord === 0) ? 'clean' : 'assisted';
       state.resultsGrid.push(status);
       if(status === 'assisted') state.missed.push(entry);
@@ -983,6 +1022,7 @@
       }, 700);
     } else {
       wrap.classList.add('wrong');
+      playWrongSound();
       if(state.mode !== 'relax'){
         state.endsAt -= WRONG_PENALTY * 1000;
         state.timeLeft = Math.max(0, Math.ceil((state.endsAt - Date.now()) / 1000));
