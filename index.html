@@ -1019,7 +1019,7 @@
     const all = await fetchAllRecords();
     const filtered = all
       .filter(r=>r.difficulty === lbSelectedDiff)
-      .sort((a,b)=> b.score - a.score)
+      .sort((a,b)=> b.score - a.score || new Date(b.date) - new Date(a.date))
       .slice(0, 10);
     list.innerHTML = '';
     if(filtered.length === 0){
