@@ -248,6 +248,7 @@
       <div class="game-wrap">
         <div class="game-meta">
           <span class="word-count" id="wordCount">1 / 18</span>
+          <span class="score-live" id="elapsedDisplay">⏱ 0:00</span>
           <span class="score-live" id="scoreLive">0 pts</span>
         </div>
         <div class="heat-track"><div class="heat-fill" id="heatFill" style="width:100%"></div></div>
@@ -630,11 +631,24 @@
     screenGame.classList.remove('hidden');
     el('pauseOverlay').classList.add('hidden');
     setupWord(0);
+    startStopwatch();
     if(mode !== 'relax'){
       startTimer();
     } else {
       el('heatFill').style.width = '100%';
     }
+  }
+
+  function startStopwatch(){
+    if(state.stopwatchId) clearInterval(state.stopwatchId);
+    state.stopwatchId = setInterval(tickStopwatch, 250);
+    tickStopwatch();
+  }
+
+  function tickStopwatch(){
+    if(!state || state.paused) return;
+    const elapsed = Math.max(0, Date.now() - state.startedAt - state.totalPausedMs);
+    el('elapsedDisplay').textContent = `⏱ ${formatElapsed(elapsed)}`;
   }
 
   function startTimer(){
@@ -656,7 +670,10 @@
   }
 
   document.addEventListener('visibilitychange', ()=>{
-    if(document.visibilityState === 'visible') tickTimer();
+    if(document.visibilityState === 'visible'){
+      tickTimer();
+      tickStopwatch();
+    }
   });
 
   function renderHeat(){
@@ -851,6 +868,7 @@
 
   function endGame(completedAll){
     if(state.timerId) clearInterval(state.timerId);
+    if(state.stopwatchId) clearInterval(state.stopwatchId);
     while(state.resultsGrid.length < state.words.length){
       state.resultsGrid.push('unreached');
       state.missed.push(state.words[state.resultsGrid.length - 1]);
@@ -929,6 +947,7 @@
   }
   function quitToHome(){
     if(state && state.timerId) clearInterval(state.timerId);
+    if(state && state.stopwatchId) clearInterval(state.stopwatchId);
     state = null;
     el('pauseOverlay').classList.add('hidden');
     screenGame.classList.add('hidden');
@@ -1040,7 +1059,7 @@
     const all = await fetchAllRecords();
     const filtered = all
       .filter(r=>r.difficulty === lbSelectedDiff)
-      .sort((a,b)=> b.score - a.score || new Date(b.date) - new Date(a.date))
+      .sort((a,b)=> b.score - a.score || (a.elapsedMs ?? Infinity) - (b.elapsedMs ?? Infinity) || new Date(b.date) - new Date(a.date))
       .slice(0, 10);
     list.innerHTML = '';
     if(filtered.length === 0){
