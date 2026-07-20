@@ -276,6 +276,7 @@
       <div class="result-title" id="resultTitle">완성!</div>
       <div class="result-sub" id="resultSub">0 / 18개 단어 완성</div>
       <div class="result-score" id="resultScore">0 pts</div>
+      <div class="result-sub" id="resultTime" style="margin-bottom:16px;">완료 시간: 0:00</div>
       <div class="grid-emoji" id="resultGrid"></div>
 
       <div class="review-box hidden" id="reviewBox">
@@ -410,7 +411,7 @@
     { key:"expert", label:"전문가" },
     { key:"god", label:"신" }
   ];
-  const FIXED_COUNTS = { beginner:30, expert:20, god:10 };
+  const FIXED_COUNTS = { expert:30, god:20 };
   const FREE_DISPLAY_OPTIONS = [
     { key:"meaning", label:"단어 뜻" },
     { key:"definition", label:"영영 풀이" }
@@ -561,8 +562,9 @@
       el('stepDown').disabled = total === 0;
       el('stepUp').disabled = total === 0;
     } else {
-      const fixed = Math.min(FIXED_COUNTS[selectedDifficulty] || 0, total);
-      el('fixedInfoLabel').textContent = `고정 단어 수: ${fixed}개 (이 레슨 보유 ${total}개)`;
+      const fixed = selectedDifficulty === 'beginner' ? total : Math.min(FIXED_COUNTS[selectedDifficulty] || 0, total);
+      const fixedText = selectedDifficulty === 'beginner' ? `전체 ${fixed}개` : `${fixed}개`;
+      el('fixedInfoLabel').textContent = `고정 단어 수: ${fixedText} (이 레슨 보유 ${total}개)`;
     }
 
     const empty = total === 0;
@@ -617,7 +619,11 @@
       missed: [],
       tiles: [],
       slots: [],
-      paused: false
+      paused: false,
+      startedAt: Date.now(),
+      totalPausedMs: 0,
+      pausedAt: null,
+      elapsedMs: 0
     };
     screenStart.classList.add('hidden');
     screenEnd.classList.add('hidden');
@@ -836,12 +842,21 @@
   /* ---------------------------------------------------------------------
      End game
   --------------------------------------------------------------------- */
+  function formatElapsed(ms){
+    const totalSec = Math.max(0, Math.round(ms / 1000));
+    const m = Math.floor(totalSec / 60);
+    const s = totalSec % 60;
+    return `${m}:${String(s).padStart(2,'0')}`;
+  }
+
   function endGame(completedAll){
     if(state.timerId) clearInterval(state.timerId);
     while(state.resultsGrid.length < state.words.length){
       state.resultsGrid.push('unreached');
       state.missed.push(state.words[state.resultsGrid.length - 1]);
     }
+
+    state.elapsedMs = Math.max(0, Date.now() - state.startedAt - state.totalPausedMs);
 
     if(state.mode !== 'relax'){
       const history = loadHistory();
@@ -850,7 +865,8 @@
         lesson: state.lesson,
         solved: state.solvedCount,
         total: state.words.length,
-        score: state.score
+        score: state.score,
+        elapsedMs: state.elapsedMs
       });
       saveHistory(history);
     }
@@ -861,6 +877,7 @@
     const diffLabel = (DIFFICULTIES.find(d=>d.key===state.difficulty) || {}).label || state.difficulty;
     el('resultSub').textContent = `Lesson ${state.lesson} · ${diffLabel} · ${state.solvedCount} / ${state.words.length}개 단어 완성`;
     el('resultScore').textContent = `${state.score} pts`;
+    el('resultTime').textContent = `완료 시간: ${formatElapsed(state.elapsedMs)}`;
     el('playerName').value = '';
     el('btnSubmitScore').disabled = false;
     el('btnSubmitScore').textContent = '순위 등록';
@@ -894,8 +911,12 @@
     el('pauseOverlay').classList.remove('hidden');
   }
   function resumeGame(){
-    if(state.pausedAt && state.mode !== 'relax' && state.endsAt){
-      state.endsAt += Date.now() - state.pausedAt;
+    if(state.pausedAt){
+      const pausedDuration = Date.now() - state.pausedAt;
+      state.totalPausedMs += pausedDuration;
+      if(state.mode !== 'relax' && state.endsAt){
+        state.endsAt += pausedDuration;
+      }
     }
     state.pausedAt = null;
     state.paused = false;
@@ -946,7 +967,7 @@
       const d = new Date(h.date);
       const row = document.createElement('div');
       row.className = 'history-row';
-      row.innerHTML = `<span class="history-date">Lesson ${h.lesson} · ${d.toLocaleDateString('ko-KR')} ${d.toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})}</span><span class="history-stat">${h.solved}/${h.total} · ${h.score}pts</span>`;
+      row.innerHTML = `<span class="history-date">Lesson ${h.lesson} · ${d.toLocaleDateString('ko-KR')} ${d.toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})}</span><span class="history-stat">${h.solved}/${h.total} · ${h.score}pts${h.elapsedMs != null ? ' · ' + formatElapsed(h.elapsedMs) : ''}</span>`;
       list.appendChild(row);
     });
   }
@@ -1029,7 +1050,7 @@
     filtered.forEach((r, i)=>{
       const row = document.createElement('div');
       row.className = 'history-row';
-      row.innerHTML = `<span class="history-date">${i+1}위 · ${r.name || '익명'} · Lesson ${r.lesson}</span><span class="history-stat">${r.solved}/${r.total} · ${r.score}pts</span>`;
+      row.innerHTML = `<span class="history-date">${i+1}위 · ${r.name || '익명'} · Lesson ${r.lesson}</span><span class="history-stat">${r.solved}/${r.total} · ${r.score}pts${r.elapsedMs != null ? ' · ' + formatElapsed(r.elapsedMs) : ''}</span>`;
       list.appendChild(row);
     });
   }
@@ -1101,6 +1122,7 @@
       score: state.score,
       solved: state.solvedCount,
       total: state.words.length,
+      elapsedMs: state.elapsedMs,
       date: new Date().toISOString()
     });
     el('btnSubmitScore').textContent = '등록 완료';
@@ -1196,7 +1218,7 @@ function doPost(e) {
   sheet.appendRow([
     body.name || '', body.lesson || '', body.difficulty || '',
     body.score || 0, body.solved || 0, body.total || 0,
-    body.date || new Date().toISOString()
+    body.elapsedMs || 0, body.date || new Date().toISOString()
   ]);
   return ContentService.createTextOutput(JSON.stringify({ ok: true }))
     .setMimeType(ContentService.MimeType.JSON);
@@ -1207,7 +1229,7 @@ function getSheet_() {
   let sheet = ss.getSheetByName('leaderboard');
   if (!sheet) {
     sheet = ss.insertSheet('leaderboard');
-    sheet.appendRow(['name','lesson','difficulty','score','solved','total','date']);
+    sheet.appendRow(['name','lesson','difficulty','score','solved','total','elapsedMs','date']);
   }
   return sheet;
 }
@@ -1253,10 +1275,13 @@ function getVisitCounts_() {
 8. 이제 이 파일을 GitHub Pages에 올리면, 접속한 모든 사람의 점수가 같은 구글
    시트에 쌓이고, 순위표 화면에서 다 함께 볼 수 있습니다.
 
-이미 리더보드용 Apps Script를 배포해두셨다면(방문자수 기능 추가 시):
-- 위 코드로 기존 Apps Script 코드를 통째로 교체하세요 (visits 관련 함수가 추가된
-  버전입니다). doGet/doPost에 방문자수 처리(type: 'visits' / type: 'visit')가
-  더해졌을 뿐, 기존 리더보드 로직은 그대로예요.
+이미 리더보드용 Apps Script를 배포해두셨다면(방문자수 · 완료 시간 기능 추가 시):
+- 위 코드로 기존 Apps Script 코드를 통째로 교체하세요 (visits 관련 함수, 그리고
+  leaderboard 시트에 elapsedMs 열이 추가된 버전입니다). doGet/doPost 로직 자체는
+  그대로고, 저장하는 열이 하나 늘었을 뿐이에요.
+- 기존에 이미 leaderboard 시트가 만들어져 있다면, 시트 맨 위 헤더 행에 수동으로
+  'elapsedMs' 열을 'total'과 'date' 사이에 하나 추가해주세요 (코드는 새 시트를
+  자동으로 만들 때만 헤더를 써주기 때문에, 이미 있는 시트는 직접 추가해야 해요).
 - 저장 후 "배포" > "배포 관리" 로 들어가서 연필(✏️) 아이콘을 누르고
   "새 버전"으로 업데이트하세요. **"새 배포"를 다시 누르면 URL이 바뀌니 주의하세요.**
   "새 버전"으로 업데이트하면 기존 URL(LEADERBOARD_ENDPOINT에 넣어두신 그 주소)이
