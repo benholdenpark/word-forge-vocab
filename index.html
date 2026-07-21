@@ -21,6 +21,7 @@
     --ember-gold:#f2a93b;
     --quench:#3e7ca8;
     --quench-glow:#7fc4ef;
+    --moss:#6fa86f;
     --danger:#c43b2e;
     --radius:8px;
     --font-display:'Bebas Neue', sans-serif;
@@ -69,6 +70,8 @@
   }
 
   .lesson-tabs{display:flex;gap:8px;margin-bottom:18px;}
+  #lessonTabs{flex-wrap:wrap;}
+  #lessonTabs .lesson-tab{flex:1 1 calc(25% - 6px);}
   .lesson-tab{
     flex:1;padding:10px 6px;border-radius:var(--radius);border:1px solid var(--iron);
     background:var(--bg-elevated);color:var(--ash-dim);text-align:center;
@@ -78,6 +81,26 @@
   .lesson-tab.active{border-color:var(--ember-gold);background:var(--bg-panel);box-shadow:0 0 0 1px var(--ember-gold) inset;}
   .lesson-tab.active .count{color:var(--ember-gold);}
   .lesson-tab:not(.active):hover{border-color:var(--iron-light);}
+  #lessonTabs .lesson-tab.active{border-color:var(--moss);box-shadow:0 0 0 1px var(--moss) inset;}
+  #lessonTabs .lesson-tab.active .count{color:var(--moss);}
+  #lessonTabs .lesson-tab:not(.active):hover{border-color:var(--iron-light);}
+
+  .settings-section{border-top:1px solid var(--iron);margin-top:16px;padding-top:16px;}
+  .settings-section:first-of-type{border-top:none;margin-top:0;padding-top:0;}
+  .section-label{
+    font-size:11px;letter-spacing:1.5px;text-transform:uppercase;
+    color:var(--ash-dim);font-weight:700;margin-bottom:10px;
+  }
+
+  .publisher-tabs{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
+  .publisher-tab{
+    flex:0 0 auto;padding:10px 18px;border-radius:999px;
+    border:1.5px solid var(--quench);background:var(--quench);
+    color:#0e2330;font-weight:700;
+  }
+  .publisher-tab .name{font-size:14px;color:#0e2330;}
+  .publisher-tab.active{box-shadow:0 0 0 2px var(--quench-glow);}
+  .publisher-tab:hover{filter:brightness(1.08);}
 
   .setting-row{
     display:flex;align-items:center;justify-content:space-between;
@@ -216,27 +239,39 @@
       <p class="sub">레슨을 고르면 그 레슨 단어 중에서 무작위로 나옵니다. 타이머가 흐르는 동안 뒤섞인 알파벳으로 단어를 조립하세요.</p>
       <div class="visit-counter" id="visitCounter"></div>
 
-      <div class="lesson-tabs" id="diffTabs"></div>
-      <div class="lesson-tabs" id="lessonTabs"></div>
-      <div class="lesson-tabs" id="caseTabs"></div>
+      <div class="settings-section">
+        <div class="section-label">교재</div>
+        <div class="lesson-tabs" id="publisherTabs"></div>
+        <div class="lesson-tabs hidden" id="lessonTabs" style="margin-top:8px;"></div>
+      </div>
 
-      <div class="setting-row hidden" id="freeControls" style="flex-direction:column;align-items:stretch;gap:12px;">
-        <div style="display:flex;align-items:center;justify-content:space-between;">
-          <div class="setting-label">한 판에 나올 단어 수<small>이 레슨 단어: <span id="bankSize">0</span>개</small></div>
-          <div class="stepper">
-            <button id="stepDown">−</button>
-            <div class="val" id="wordCountVal">18</div>
-            <button id="stepUp">+</button>
+      <div class="settings-section">
+        <div class="section-label">난이도</div>
+        <div class="lesson-tabs" id="diffTabs"></div>
+
+        <div class="setting-row hidden" id="freeControls" style="flex-direction:column;align-items:stretch;gap:12px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <div class="setting-label">한 판에 나올 단어 수<small>이 레슨 단어: <span id="bankSize">0</span>개</small></div>
+            <div class="stepper">
+              <button id="stepDown">−</button>
+              <div class="val" id="wordCountVal">18</div>
+              <button id="stepUp">+</button>
+            </div>
           </div>
+          <div class="lesson-tabs" id="freeDisplayTabs" style="margin-bottom:0;"></div>
         </div>
-        <div class="lesson-tabs" id="freeDisplayTabs" style="margin-bottom:0;"></div>
+
+        <div class="setting-row hidden" id="fixedInfo">
+          <div class="setting-label" id="fixedInfoLabel">고정 단어 수</div>
+        </div>
       </div>
 
-      <div class="setting-row hidden" id="fixedInfo">
-        <div class="setting-label" id="fixedInfoLabel">고정 단어 수</div>
+      <div class="settings-section">
+        <div class="section-label">글자 표시</div>
+        <div class="lesson-tabs" id="caseTabs" style="margin-bottom:0;"></div>
       </div>
 
-      <button class="btn btn-primary" id="btnPlay">연습 시작</button>
+      <button class="btn btn-primary" id="btnPlay" style="margin-top:18px;">연습 시작</button>
       <button class="btn btn-secondary" id="btnRelax">여유 모드 (타이머 없음)</button>
       <div class="btn-row" style="margin-bottom:10px;">
         <button class="btn btn-ghost" id="btnHistoryStart" style="margin-bottom:0;">지난 기록 보기</button>
@@ -332,16 +367,248 @@
   "use strict";
 
   /* ======================================================================
-     CONFIG — 레슨별로 단어를 관리합니다.
+     CONFIG — 출판사(교과서)별로 레슨과 단어를 관리합니다.
      word: 영단어(구는 띄어쓰기 포함 가능, 예: "life jacket")
      meaning: 학생에게 보여줄 한글 뜻
      def: 초급/중급 난이도에서 보여줄 쉬운 영어 뜻풀이 (직접 작성)
      pos: 품사 표시용 (동사/명사/형용사/부사 등, 없으면 빈 문자열)
 
-     레슨을 추가하려면 아래 LESSONS 객체에 같은 형식으로
-     항목을 채워 넣으세요. 단어 수 제한은 없습니다.
+     새 교과서를 추가하려면, 아래 PUBLISHERS 객체에 새 키를 하나 더
+     만들고 (예: "NE": { label:'NE능률', lessonOrder:[...], lessons:{...} })
+     PUBLISHER_ORDER 배열에도 그 키를 추가하세요.
   ====================================================================== */
-  const LESSONS = {
+  const PUBLISHERS = {
+    "VS": {
+      label: "Visang",
+      lessonOrder: ["1","2","3","4","5","6","7","8"],
+      lessons: {
+    "1": [
+      {word:'already', meaning:'벌써, 이미', def:"before now, or earlier than expected", pos:'부사'},
+      {word:'art', meaning:'미술, 예술', def:"the activity of creating paintings, drawings, or other visual works", pos:'명사'},
+      {word:'baseball', meaning:'야구', def:"a sport played with a bat and ball between two teams of nine players", pos:'명사'},
+      {word:'basketball', meaning:'농구', def:"a sport where two teams try to throw a ball through a high hoop", pos:'명사'},
+      {word:'bell', meaning:'종, 종소리', def:"a hollow metal object that makes a ringing sound when struck", pos:'명사'},
+      {word:'bread', meaning:'빵', def:"a food made by baking a mixture of flour and water", pos:'명사'},
+      {word:'call', meaning:'부르다, 전화하다', def:"to say someone's name loudly, or to phone someone", pos:'동사'},
+      {word:'chair', meaning:'의자', def:"a piece of furniture for one person to sit on", pos:'명사'},
+      {word:'character', meaning:'등장인물', def:"a person in a story, movie, or game", pos:'명사'},
+      {word:'check', meaning:'점검하다, 확인하다', def:"to look at something to make sure it is correct or working", pos:'동사'},
+      {word:'class', meaning:'수업', def:"a period of time when students are taught a subject", pos:'명사'},
+      {word:'classmate', meaning:'반 친구', def:"a student who is in the same class as you", pos:'명사'},
+      {word:'color', meaning:'색', def:"the quality that makes things look different, like red or blue", pos:'명사'},
+      {word:'cook', meaning:'요리사', def:"a person whose job is to prepare food", pos:'명사'},
+      {word:'cool', meaning:'멋진', def:"fashionable and impressive, in a relaxed way", pos:'형용사'},
+      {word:'cousin', meaning:'사촌', def:"the child of your aunt or uncle", pos:'명사'},
+      {word:'dinner', meaning:'저녁 식사', def:"the main meal eaten in the evening", pos:'명사'},
+      {word:'egg', meaning:'계란, 달걀', def:"an oval object laid by a bird, often eaten as food", pos:'명사'},
+      {word:'favorite', meaning:'가장 좋아하는', def:"liked more than any other", pos:'형용사'},
+      {word:'first', meaning:'첫 번째의', def:"coming before all others in order or time", pos:'형용사'},
+      {word:'flower', meaning:'꽃', def:"the colorful part of a plant that often has a pleasant smell", pos:'명사'},
+      {word:'homework', meaning:'숙제', def:"school work that students do at home", pos:'명사'},
+      {word:'hungry', meaning:'배가 고픈', def:"feeling like you need to eat", pos:'형용사'},
+      {word:'jeans', meaning:'바지, 청바지', def:"pants made of a strong blue cotton fabric", pos:'명사'},
+      {word:'late', meaning:'늦은', def:"happening or arriving after the expected time", pos:'형용사'},
+      {word:'live', meaning:'살다', def:"to have your home in a particular place", pos:'동사'},
+      {word:'math', meaning:'수학', def:"the study of numbers, shapes, and quantities", pos:'명사'},
+      {word:'meet', meaning:'만나다', def:"to come together with someone, often for the first time", pos:'동사'},
+      {word:'milk', meaning:'우유', def:"a white liquid produced by cows and other animals, used as food", pos:'명사'},
+      {word:'music room', meaning:'음악실', def:"a room in a school used for music classes", pos:'명사'},
+      {word:'pencil case', meaning:'필통', def:"a small case used to hold pencils and pens", pos:'명사'},
+      {word:'pet', meaning:'반려동물', def:"an animal kept at home for company", pos:'명사'},
+      {word:'picture', meaning:'사진, 그림', def:"an image made by drawing, painting, or photography", pos:'명사'},
+      {word:'police officer', meaning:'경찰관', def:"a person whose job is to enforce the law and keep people safe", pos:'명사'},
+      {word:'read', meaning:'읽다', def:"to look at written words and understand their meaning", pos:'동사'},
+      {word:'ring', meaning:'울리다', def:"to make a clear ringing sound, like a bell or phone", pos:'동사'},
+      {word:'run', meaning:'뛰다, 달리다', def:"to move quickly using your legs", pos:'동사'},
+      {word:'same', meaning:'같은, 동일한', def:"exactly alike; not different", pos:'형용사'},
+      {word:'science', meaning:'과학', def:"the study of the natural world through observation and experiments", pos:'명사'},
+      {word:'scientist', meaning:'과학자', def:"a person who studies or works in science", pos:'명사'},
+      {word:'sick', meaning:'아픈, 병든', def:"not feeling well; suffering from an illness", pos:'형용사'},
+      {word:'sister', meaning:'언니, 누나, 여동생', def:"a girl or woman who has the same parents as you", pos:'명사'},
+      {word:'sit', meaning:'앉다', def:"to rest your body on a chair or the ground with your back straight", pos:'동사'},
+      {word:'someone', meaning:'누군가', def:"an unknown or unspecified person", pos:'명사'},
+      {word:'sport', meaning:'스포츠, 운동', def:"a physical activity done for exercise or competition", pos:'명사'},
+      {word:'strawberry', meaning:'딸기', def:"a small red fruit with tiny seeds on its surface", pos:'명사'},
+      {word:'street', meaning:'거리', def:"a road in a town or city, usually with buildings on both sides", pos:'명사'},
+      {word:'subject', meaning:'과목', def:"a topic that is studied in school", pos:'명사'},
+      {word:'textbook', meaning:'교과서', def:"a book used for studying a school subject", pos:'명사'},
+      {word:'tie', meaning:'넥타이', def:"a long piece of cloth worn around the neck, often with a shirt", pos:'명사'},
+      {word:'timetable', meaning:'시간표', def:"a schedule that shows when classes or events happen", pos:'명사'},
+      {word:'uniform', meaning:'교복, 유니폼', def:"a special set of clothes worn by members of a group, like students", pos:'명사'},
+      {word:'wait', meaning:'(잠깐) 멈추다, 기다리다', def:"to stay in one place until something happens", pos:'동사'},
+      {word:'walk', meaning:'걷다, 걸어가다', def:"to move on foot at a normal speed", pos:'동사'},
+      {word:'wear', meaning:'입다, 착용하다', def:"to have clothing or an accessory on your body", pos:'동사'},
+      {word:'worried', meaning:'걱정되는', def:"feeling anxious about something that might happen", pos:'형용사'}
+    ],
+    "2": [
+      {word:'bake', meaning:'(음식을) 굽다', def:"to cook food using dry heat in an oven", pos:'동사'},
+      {word:'bike', meaning:'자전거', def:"a two-wheeled vehicle you ride by pedaling", pos:'명사'},
+      {word:'birthday', meaning:'생일', def:"the day of the year when a person was born", pos:'명사'},
+      {word:'blow', meaning:'불다, 날리다, (~ out) 불어서 끄다', def:"to push air out of your mouth, or to move because of wind", pos:'동사'},
+      {word:'candle', meaning:'양초, 초', def:"a stick of wax with a wick that is burned to give light", pos:'명사'},
+      {word:'city', meaning:'도시', def:"a large town where many people live", pos:'명사'},
+      {word:'classroom', meaning:'교실', def:"a room in a school where lessons are taught", pos:'명사'},
+      {word:'dish', meaning:'접시, 요리', def:"a flat container for holding food, or a particular kind of food", pos:'명사'},
+      {word:'during', meaning:'~ 동안', def:"throughout a particular period of time", pos:'전치사'},
+      {word:'early', meaning:'일찍', def:"before the usual or expected time", pos:'부사'},
+      {word:'eat out', meaning:'외식하다', def:"to have a meal at a restaurant instead of at home", pos:'동사'},
+      {word:'exercise', meaning:'운동하다', def:"to move your body to stay healthy and strong", pos:'동사'},
+      {word:'family', meaning:'가족', def:"a group of people related to each other, such as parents and children", pos:'명사'},
+      {word:'film', meaning:'촬영하다, 찍다', def:"to record moving pictures with a camera", pos:'동사'},
+      {word:'floor', meaning:'바닥', def:"the flat surface of a room that you walk on", pos:'명사'},
+      {word:'free', meaning:'한가한, 자유로운', def:"not busy, or able to do what you want", pos:'형용사'},
+      {word:'garden', meaning:'정원', def:"an area of land where plants, flowers, or vegetables are grown", pos:'명사'},
+      {word:'get up', meaning:'일어나다', def:"to rise from a lying or sitting position", pos:'동사'},
+      {word:'gift', meaning:'선물', def:"something given to someone, often to show love or thanks", pos:'명사'},
+      {word:'great-grandmother', meaning:'증조할머니', def:"the mother of your grandmother or grandfather", pos:'명사'},
+      {word:'guest', meaning:'손님', def:"a person who is invited to visit or stay at someone's home or event", pos:'명사'},
+      {word:'hold', meaning:'들다, 잡다, 껴안다', def:"to have something in your hands or arms", pos:'동사'},
+      {word:'introduce', meaning:'소개하다', def:"to tell someone another person's name for the first time", pos:'동사'},
+      {word:'join', meaning:'함께하다[합류하다], 가입하다', def:"to become a member of a group, or to take part in an activity", pos:'동사'},
+      {word:'lesson', meaning:'수업, 레슨', def:"a period of time for learning a subject or skill", pos:'명사'},
+      {word:'light', meaning:'불을 붙이다, (불을) 켜다, 밝히다', def:"to make something start burning or to turn on a light", pos:'동사'},
+      {word:'little', meaning:'작은', def:"small in size or amount", pos:'형용사'},
+      {word:'look at', meaning:'~을 보다', def:"to direct your eyes toward something", pos:'동사'},
+      {word:'look for', meaning:'~을 찾다', def:"to try to find something", pos:'동사'},
+      {word:'make sense', meaning:'이해가 되다, 말이 되다', def:"to be easy to understand or logical", pos:'동사'},
+      {word:'now', meaning:'지금', def:"at the present time", pos:'부사'},
+      {word:'open', meaning:'열리다, 열다, 시작하다', def:"to make something no longer closed, or to begin", pos:'동사'},
+      {word:'owner', meaning:'주인', def:"a person who possesses or owns something", pos:'명사'},
+      {word:'paint', meaning:'(페인트를) 칠하다, 그리다', def:"to cover a surface with paint, or to create a picture using paint", pos:'동사'},
+      {word:'pick', meaning:'(과일 등을) 따다', def:"to pull a fruit or flower off a plant", pos:'동사'},
+      {word:'place', meaning:'장소', def:"a particular position, area, or location", pos:'명사'},
+      {word:'playground', meaning:'운동장', def:"an outdoor area where children can play", pos:'명사'},
+      {word:'pool', meaning:'수영장', def:"a container of water used for swimming", pos:'명사'},
+      {word:'prepare', meaning:'준비하다', def:"to get something ready for future use", pos:'동사'},
+      {word:'put', meaning:'놓다, (~on) 입다', def:"to move something to a particular place, or to place clothing on your body", pos:'동사'},
+      {word:'ride', meaning:'타다', def:"to travel on a bike, in a vehicle, or on an animal", pos:'동사'},
+      {word:'right', meaning:'옳은, 올바른, 적절한', def:"correct or suitable", pos:'형용사'},
+      {word:'rose', meaning:'장미', def:"a flower that often has a sweet smell and thorny stem", pos:'명사'},
+      {word:'slowly', meaning:'천천히', def:"at a low speed; not quickly", pos:'부사'},
+      {word:'special', meaning:'특별한', def:"different from what is usual, in a good way", pos:'형용사'},
+      {word:'stage', meaning:'무대', def:"a raised platform where performers stand", pos:'명사'},
+      {word:'stand', meaning:'서다, 서 있다', def:"to be on your feet in an upright position", pos:'동사'},
+      {word:'strange', meaning:'이상한, 낯선', def:"unusual or unfamiliar", pos:'형용사'},
+      {word:'sweater', meaning:'스웨터', def:"a warm knitted piece of clothing worn on the upper body", pos:'명사'},
+      {word:'take a walk', meaning:'산책하다', def:"to go for a walk, usually for relaxation or exercise", pos:'동사'},
+      {word:'twin', meaning:'쌍둥이의', def:"being one of two children born to the same mother at the same time", pos:'형용사'},
+      {word:'usually', meaning:'보통', def:"most of the time; normally", pos:'부사'},
+      {word:'wall', meaning:'벽', def:"a vertical structure that divides or encloses a space", pos:'명사'},
+      {word:'water', meaning:'물을 주다', def:"to pour water on a plant to help it grow", pos:'동사'},
+      {word:'work out', meaning:'운동하다', def:"to exercise your body to become stronger or healthier", pos:'동사'}
+    ],
+    "3": [
+      {word:'actor', meaning:'배우', def:"a person who performs in movies, TV shows, or plays", pos:'명사'},
+      {word:'address', meaning:'주소', def:"the details of where a building is located, used for mail or visits", pos:'명사'},
+      {word:'always', meaning:'항상', def:"at all times; every time", pos:'부사'},
+      {word:'amazing', meaning:'놀라운', def:"causing great surprise or wonder", pos:'형용사'},
+      {word:'animal', meaning:'동물', def:"a living creature that is not a plant, such as a dog or bird", pos:'명사'},
+      {word:'another', meaning:'또 다른, 다른', def:"one more, or a different one", pos:'형용사'},
+      {word:'arrive', meaning:'도착하다', def:"to reach a place after traveling", pos:'동사'},
+      {word:'bath', meaning:'목욕', def:"the act of washing your whole body in water", pos:'명사'},
+      {word:'bring', meaning:'가져오다', def:"to carry something to a place", pos:'동사'},
+      {word:'brown', meaning:'갈색의', def:"having the color of coffee or soil", pos:'형용사'},
+      {word:'busy', meaning:'바쁜', def:"having a lot to do; not free", pos:'형용사'},
+      {word:'button', meaning:'버튼, 단추', def:"a small round object used to fasten clothing, or a device you press", pos:'명사'},
+      {word:'check', meaning:'확인하다, 점검하다', def:"to look at something to make sure it is correct", pos:'동사'},
+      {word:'clean', meaning:'청소하다', def:"to remove dirt from something", pos:'동사'},
+      {word:'cold', meaning:'추운', def:"having a low temperature", pos:'형용사'},
+      {word:'ear', meaning:'귀', def:"the body part used for hearing", pos:'명사'},
+      {word:'everyone', meaning:'모두, 모든 사람', def:"every person; all people", pos:'대명사'},
+      {word:'fall', meaning:'넘어지다, 쓰러지다', def:"to drop down suddenly, often by accident", pos:'동사'},
+      {word:'favorite', meaning:'가장 좋아하는', def:"liked more than any other", pos:'형용사'},
+      {word:'few', meaning:'(a ~) 약간의, 거의 없는', def:"a small number of, or almost none", pos:'형용사'},
+      {word:'film a movie', meaning:'영화를 찍다', def:"to record a movie using a camera", pos:'동사'},
+      {word:'find', meaning:'찾다, 발견하다', def:"to discover something you were looking for, or something unexpected", pos:'동사'},
+      {word:'floor', meaning:'바닥', def:"the flat surface of a room that you walk on", pos:'명사'},
+      {word:'friend', meaning:'친구', def:"a person you know well and like", pos:'명사'},
+      {word:'front', meaning:'앞부분, 맨 앞쪽', def:"the part of something that faces forward", pos:'명사'},
+      {word:'happen', meaning:'발생하다, 일어나다', def:"to take place; to occur", pos:'동사'},
+      {word:'help', meaning:'도움', def:"assistance given to someone", pos:'명사'},
+      {word:'hero', meaning:'영웅', def:"a person admired for great courage or achievements", pos:'명사'},
+      {word:'hour', meaning:'시간', def:"a unit of time equal to sixty minutes", pos:'명사'},
+      {word:'last', meaning:'지난', def:"most recent; the one before this one", pos:'형용사'},
+      {word:'later', meaning:'나중에, 뒤[후]에', def:"at a time after the present or after another event", pos:'부사'},
+      {word:'life', meaning:'목숨, 삶, 인생', def:"the state of being alive, or a person's time of being alive", pos:'명사'},
+      {word:'lose', meaning:'잃어버리다, 잃다', def:"to no longer have something, often by accident", pos:'동사'},
+      {word:'lost', meaning:'잃어버린, 길을 잃은', def:"unable to find your way, or no longer having something", pos:'형용사'},
+      {word:'moment', meaning:'순간, 잠시', def:"a very short period of time", pos:'명사'},
+      {word:'move', meaning:'움직이다, 옮기다', def:"to change position or place", pos:'동사'},
+      {word:'need', meaning:'필요로 하다, ~할 필요가 있다', def:"to require something because it is necessary", pos:'동사'},
+      {word:'next to', meaning:'~의 (바로) 옆에', def:"right beside something", pos:'전치사'},
+      {word:'often', meaning:'자주', def:"many times; frequently", pos:'부사'},
+      {word:'only', meaning:'겨우, 단지', def:"no more than; just", pos:'부사'},
+      {word:'perfect', meaning:'완벽한', def:"having no flaws; exactly right", pos:'형용사'},
+      {word:'police officer', meaning:'경찰관', def:"a person whose job is to enforce the law and keep people safe", pos:'명사'},
+      {word:'push', meaning:'누르다, 밀다', def:"to press something firmly to move it away from you", pos:'동사'},
+      {word:'remember', meaning:'기억하다', def:"to keep something in your mind or recall it", pos:'동사'},
+      {word:'reporter', meaning:'기자', def:"a person who collects and reports news", pos:'명사'},
+      {word:'save', meaning:'구하다', def:"to rescue someone or something from danger", pos:'동사'},
+      {word:'sick', meaning:'아픈, 병든', def:"not feeling well; suffering from an illness", pos:'형용사'},
+      {word:'sing', meaning:'노래하다, 노래를 부르다', def:"to make music with your voice", pos:'동사'},
+      {word:'sound', meaning:'소리', def:"something that can be heard", pos:'명사'},
+      {word:'stay', meaning:'머무르다, 지내다', def:"to remain in a place instead of leaving", pos:'동사'},
+      {word:'sure', meaning:'물론이죠, 그럼요', def:"used to agree with someone or show willingness", pos:'부사'},
+      {word:'surprising', meaning:'놀라운, 깜짝의', def:"causing surprise because it is unexpected", pos:'형용사'},
+      {word:'tail', meaning:'꼬리', def:"the part that sticks out from the back end of an animal's body", pos:'명사'},
+      {word:'telephone', meaning:'전화기, 전화', def:"a device used to talk to someone who is far away", pos:'명사'},
+      {word:'tell', meaning:'말하다, (말로 표현)하다', def:"to give information to someone by speaking", pos:'동사'},
+      {word:'together', meaning:'함께', def:"with each other; not separately", pos:'부사'},
+      {word:'town', meaning:'마을', def:"a place where people live, larger than a village but smaller than a city", pos:'명사'}
+    ],
+    "4": [
+      {word:'add', meaning:'추가하다, 덧붙이다', def:"to put something together with something else", pos:'동사'},
+      {word:'artist', meaning:'예술가', def:"a person who creates art, such as paintings or music", pos:'명사'},
+      {word:'become', meaning:'~이 되다, ~지다', def:"to start to be something", pos:'동사'},
+      {word:'bright', meaning:'밝은', def:"full of light, or having strong, vivid color", pos:'형용사'},
+      {word:'buy', meaning:'사다, 구입하다', def:"to get something by paying money for it", pos:'동사'},
+      {word:'change', meaning:'바뀌다, 변하다', def:"to become different", pos:'동사'},
+      {word:'choose', meaning:'고르다', def:"to pick one thing from a number of options", pos:'동사'},
+      {word:'clock', meaning:'시계', def:"a device that shows what time it is", pos:'명사'},
+      {word:'color', meaning:'색, 색깔', def:"the quality that makes things look different, like red or blue", pos:'명사'},
+      {word:'dark', meaning:'어두운', def:"having little or no light", pos:'형용사'},
+      {word:'different', meaning:'다른', def:"not the same as another thing", pos:'형용사'},
+      {word:'draw', meaning:'그리다', def:"to make a picture using a pen or pencil", pos:'동사'},
+      {word:'elephant', meaning:'코끼리', def:"a very large gray animal with a long trunk and big ears", pos:'명사'},
+      {word:'enjoy', meaning:'즐기다', def:"to get pleasure from doing something", pos:'동사'},
+      {word:'everything', meaning:'모든 것, 모두', def:"all things; the whole of something", pos:'명사'},
+      {word:'example', meaning:'사례, 예시', def:"something that shows what a group of things is like", pos:'명사'},
+      {word:'follow', meaning:'따르다, 따라가다', def:"to go after or behind someone or something", pos:'동사'},
+      {word:'future', meaning:'미래', def:"the time that has not happened yet", pos:'명사'},
+      {word:'give', meaning:'주다', def:"to hand something to someone as a gift or offering", pos:'동사'},
+      {word:'give a try', meaning:'한번 해 보다', def:"to attempt something to see if it works", pos:'동사'},
+      {word:'glass', meaning:'유리', def:"a hard, clear material used for windows and containers", pos:'명사'},
+      {word:'guide', meaning:'가이드, 안내자', def:"a person who shows others the way or explains things", pos:'명사'},
+      {word:'interesting', meaning:'흥미로운', def:"holding your attention because it is unusual or enjoyable", pos:'형용사'},
+      {word:'lastly', meaning:'마지막으로', def:"used to introduce the final point in a list", pos:'부사'},
+      {word:'leave', meaning:'두고 오다, (~한 상태로) 두다', def:"to go away and not take something with you, or to allow something to remain in a state", pos:'동사'},
+      {word:'letter', meaning:'편지', def:"a written message usually sent by mail", pos:'명사'},
+      {word:'library', meaning:'도서관', def:"a place where books are kept for people to read or borrow", pos:'명사'},
+      {word:'light', meaning:'불, 빛', def:"brightness that lets you see things", pos:'명사'},
+      {word:'look around', meaning:'둘러보다, 구경하다', def:"to look at different parts of a place", pos:'동사'},
+      {word:'look at', meaning:'~을 보다', def:"to direct your eyes toward something", pos:'동사'},
+      {word:'make', meaning:'만들다', def:"to create or produce something", pos:'동사'},
+      {word:'museum', meaning:'박물관', def:"a building where interesting and valuable objects are shown to the public", pos:'명사'},
+      {word:'national', meaning:'국립의, 국가의, 국가 소유의', def:"belonging to or connected with an entire nation", pos:'형용사'},
+      {word:'painting', meaning:'그림', def:"a picture made using paint", pos:'명사'},
+      {word:'piece', meaning:'조각', def:"a part of something that has been separated from the whole", pos:'명사'},
+      {word:'quiet', meaning:'조용한', def:"making little or no noise", pos:'형용사'},
+      {word:'send', meaning:'보내다, 발송하다', def:"to make something go to another place or person", pos:'동사'},
+      {word:'shadow', meaning:'그림자', def:"a dark shape made when something blocks light", pos:'명사'},
+      {word:'show', meaning:'보여 주다', def:"to let someone see something", pos:'동사'},
+      {word:'smart', meaning:'똑똑한', def:"intelligent; quick to learn or understand", pos:'형용사'},
+      {word:'some', meaning:'약간의, 일부(의), 몇몇(의)', def:"an amount or number of something, but not all of it", pos:'형용사'},
+      {word:'style', meaning:'양식, 스타일', def:"a particular way of doing, making, or expressing something", pos:'명사'},
+      {word:'take', meaning:'데리고[가지고] 가다, 선택하다', def:"to carry something with you, or to choose something", pos:'동사'},
+      {word:'theater', meaning:'극장', def:"a building where plays, shows, or movies are performed or shown", pos:'명사'},
+      {word:'tonight', meaning:'오늘 밤(에)', def:"during the evening or night of today", pos:'부사'},
+      {word:'touch', meaning:'손을 대다, 만지다', def:"to put your hand or fingers on something", pos:'동사'},
+      {word:'turn', meaning:'차례', def:"a person's chance to do something in an order with others", pos:'명사'},
+      {word:'turn off', meaning:'끄다', def:"to stop a device or light from working", pos:'동사'},
+      {word:'umbrella', meaning:'우산', def:"a device you hold over your head to stay dry in the rain", pos:'명사'},
+      {word:'use', meaning:'이용하다, 사용하다', def:"to do something with an object for a particular purpose", pos:'동사'},
+      {word:'visit', meaning:'방문', def:"an act of going to see a person or place", pos:'명사'}
+    ],
     "5": [
       {word:"add", meaning:"추가하다", def:"to put something together with something else to make a bigger group or total", pos:"동사"},
       {word:"adventure", meaning:"모험", def:"an exciting experience or journey that often involves some risk", pos:"명사"},
@@ -572,8 +839,10 @@
       {word:'tie', meaning:'묶다', def:"to fasten something with a string or rope", pos:'동사'},
       {word:'trust', meaning:'믿음, 신뢰', def:"a strong belief in the honesty or reliability of someone", pos:'명사'}
     ]
+      }
+    }
   };
-  const LESSON_ORDER = ["5","6","7","8"];
+  const PUBLISHER_ORDER = ["VS"];
   const DIFFICULTIES = [
     { key:"free", label:"자유" },
     { key:"beginner", label:"초보자" },
@@ -602,6 +871,7 @@
   const VISIT_LOCAL_KEY = 'wordforge_vocab_visits_local_v1';
   const COUNT_KEY = 'wordforge_vocab_wordcount_v1';
   const LESSON_KEY = 'wordforge_vocab_lesson_v1';
+  const PUBLISHER_KEY = 'wordforge_vocab_publisher_v1';
   const DIFF_KEY = 'wordforge_vocab_difficulty_v1';
   const FREE_DISPLAY_KEY = 'wordforge_vocab_free_display_v1';
   const CASE_KEY = 'wordforge_vocab_case_v1';
@@ -643,18 +913,59 @@
   const el = (id)=>document.getElementById(id);
 
   /* ---------------------------------------------------------------------
-     Lesson + difficulty + round-length selection
+     Publisher + lesson + difficulty + round-length selection
   --------------------------------------------------------------------- */
+  let selectedPublisher = null;
+
   let selectedLesson = localStorage.getItem(LESSON_KEY);
-  if(!selectedLesson || !LESSONS[selectedLesson]){
-    selectedLesson = LESSON_ORDER.find(k=>LESSONS[k].length > 0) || LESSON_ORDER[0];
+
+  function currentLessonOrder(){
+    return selectedPublisher ? PUBLISHERS[selectedPublisher].lessonOrder : [];
   }
+  function currentLessonsMap(){
+    return selectedPublisher ? PUBLISHERS[selectedPublisher].lessons : {};
+  }
+  function ensureValidLesson(){
+    const order = currentLessonOrder();
+    const lessons = currentLessonsMap();
+    if(!selectedLesson || !order.includes(selectedLesson) || (lessons[selectedLesson]||[]).length === 0){
+      selectedLesson = order.find(k=>(lessons[k]||[]).length > 0) || order[0] || null;
+    }
+  }
+  if(selectedPublisher) ensureValidLesson();
+
   let selectedDifficulty = localStorage.getItem(DIFF_KEY) || 'beginner';
   if(!DIFFICULTIES.some(d=>d.key === selectedDifficulty)) selectedDifficulty = 'beginner';
   let wordCount = parseInt(localStorage.getItem(COUNT_KEY), 10) || 18;
 
   function currentLessonWords(){
-    return LESSONS[selectedLesson] || [];
+    return currentLessonsMap()[selectedLesson] || [];
+  }
+
+  function renderPublisherTabs(){
+    const wrap = el('publisherTabs');
+    wrap.innerHTML = '';
+    PUBLISHER_ORDER.forEach(key=>{
+      const pub = PUBLISHERS[key];
+      const active = key === selectedPublisher;
+      const btn = document.createElement('button');
+      btn.className = 'publisher-tab' + (active ? ' active' : '');
+      btn.innerHTML = `<span class="name">📚 ${key}${active ? ' · ' + pub.label : ''}</span>`;
+      btn.addEventListener('click', ()=>{
+        if(selectedPublisher === key){
+          // clicking the already-active publisher collapses it
+          selectedPublisher = null;
+          localStorage.removeItem(PUBLISHER_KEY);
+        } else {
+          selectedPublisher = key;
+          localStorage.setItem(PUBLISHER_KEY, key);
+          ensureValidLesson();
+          if(selectedLesson) localStorage.setItem(LESSON_KEY, selectedLesson);
+        }
+        renderSettings();
+      });
+      wrap.appendChild(btn);
+    });
   }
 
   let selectedFreeDisplay = localStorage.getItem(FREE_DISPLAY_KEY) || 'meaning';
@@ -719,8 +1030,10 @@
   function renderLessonTabs(){
     const wrap = el('lessonTabs');
     wrap.innerHTML = '';
-    LESSON_ORDER.forEach(key=>{
-      const words = LESSONS[key] || [];
+    if(!selectedPublisher) return;
+    const lessons = currentLessonsMap();
+    currentLessonOrder().forEach(key=>{
+      const words = lessons[key] || [];
       const btn = document.createElement('button');
       btn.className = 'lesson-tab' + (key === selectedLesson ? ' active' : '');
       btn.innerHTML = `<span class="name">${key === selectedLesson ? '✓ ' : ''}Lesson ${key}</span><span class="count">${words.length}개</span>`;
@@ -742,15 +1055,26 @@
   }
 
   function renderSettings(){
+    renderPublisherTabs();
     renderDiffTabs();
     renderFreeDisplayTabs();
-    renderLessonTabs();
     renderCaseTabs();
+
+    const wrap = el('lessonTabs');
+    const noPublisher = !selectedPublisher;
+    wrap.classList.toggle('hidden', noPublisher);
+    el('freeControls').classList.toggle('hidden', noPublisher || selectedDifficulty !== 'free');
+    el('fixedInfo').classList.toggle('hidden', noPublisher || selectedDifficulty === 'free');
+
+    if(noPublisher){
+      el('btnPlay').disabled = true;
+      el('btnRelax').disabled = true;
+      return;
+    }
+
+    renderLessonTabs();
     const total = currentLessonWords().length;
     const isFree = selectedDifficulty === 'free';
-
-    el('freeControls').classList.toggle('hidden', !isFree);
-    el('fixedInfo').classList.toggle('hidden', isFree);
 
     if(isFree){
       const minC = Math.min(5, Math.max(1, total));
@@ -769,7 +1093,7 @@
     const empty = total === 0;
     el('btnPlay').disabled = empty;
     el('btnRelax').disabled = empty;
-    if(empty) showToast(`Lesson ${selectedLesson}에는 아직 단어가 없어요`);
+    if(empty && selectedLesson) showToast(`Lesson ${selectedLesson}에는 아직 단어가 없어요`);
   }
 
   el('stepDown').addEventListener('click', ()=>{
