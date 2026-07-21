@@ -93,6 +93,10 @@
   }
 
   .publisher-tabs{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
+  .grade-label{
+    font-size:12px;color:var(--quench-glow);font-weight:700;
+    margin-top:10px;margin-bottom:2px;
+  }
   .publisher-tab{
     flex:0 0 auto;padding:10px 18px;border-radius:999px;
     border:1.5px solid var(--quench);background:var(--quench);
@@ -242,6 +246,7 @@
       <div class="settings-section">
         <div class="section-label">교재</div>
         <div class="lesson-tabs" id="publisherTabs"></div>
+        <div class="grade-label hidden" id="gradeLabel"></div>
         <div class="lesson-tabs hidden" id="lessonTabs" style="margin-top:8px;"></div>
       </div>
 
@@ -380,6 +385,7 @@
   const PUBLISHERS = {
     "VS": {
       label: "Visang",
+      grade: "1학년",
       lessonOrder: ["1","2","3","4","5","6","7","8"],
       lessons: {
     "1": [
@@ -1063,6 +1069,11 @@
     const wrap = el('lessonTabs');
     const noPublisher = !selectedPublisher;
     wrap.classList.toggle('hidden', noPublisher);
+    el('gradeLabel').classList.toggle('hidden', noPublisher);
+    if(!noPublisher){
+      const grade = PUBLISHERS[selectedPublisher].grade || '';
+      el('gradeLabel').textContent = grade;
+    }
     el('freeControls').classList.toggle('hidden', noPublisher || selectedDifficulty !== 'free');
     el('fixedInfo').classList.toggle('hidden', noPublisher || selectedDifficulty === 'free');
 
