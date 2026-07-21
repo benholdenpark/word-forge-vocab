@@ -75,9 +75,9 @@
   }
   .lesson-tab .name{font-size:13px;font-weight:700;color:var(--ash);}
   .lesson-tab .count{display:block;font-size:11px;margin-top:2px;}
-  .lesson-tab.active{border-color:var(--ember-gold);background:var(--bg-panel);}
+  .lesson-tab.active{border-color:var(--ember-gold);background:var(--bg-panel);box-shadow:0 0 0 1px var(--ember-gold) inset;}
   .lesson-tab.active .count{color:var(--ember-gold);}
-  .lesson-tab:hover{border-color:var(--iron-light);}
+  .lesson-tab:not(.active):hover{border-color:var(--iron-light);}
 
   .setting-row{
     display:flex;align-items:center;justify-content:space-between;
@@ -673,7 +673,7 @@
     CASE_OPTIONS.forEach(o=>{
       const btn = document.createElement('button');
       btn.className = 'lesson-tab' + (o.key === selectedCase ? ' active' : '');
-      btn.innerHTML = `<span class="name">${o.label}</span>`;
+      btn.innerHTML = `<span class="name">${o.key === selectedCase ? '✓ ' : ''}${o.label}</span>`;
       btn.addEventListener('click', ()=>{
         selectedCase = o.key;
         localStorage.setItem(CASE_KEY, o.key);
@@ -690,7 +690,7 @@
     DIFFICULTIES.forEach(d=>{
       const btn = document.createElement('button');
       btn.className = 'lesson-tab' + (d.key === selectedDifficulty ? ' active' : '');
-      btn.innerHTML = `<span class="name">${d.label}</span>`;
+      btn.innerHTML = `<span class="name">${d.key === selectedDifficulty ? '✓ ' : ''}${d.label}</span>`;
       btn.addEventListener('click', ()=>{
         selectedDifficulty = d.key;
         localStorage.setItem(DIFF_KEY, d.key);
@@ -706,7 +706,7 @@
     FREE_DISPLAY_OPTIONS.forEach(o=>{
       const btn = document.createElement('button');
       btn.className = 'lesson-tab' + (o.key === selectedFreeDisplay ? ' active' : '');
-      btn.innerHTML = `<span class="name">${o.label}</span>`;
+      btn.innerHTML = `<span class="name">${o.key === selectedFreeDisplay ? '✓ ' : ''}${o.label}</span>`;
       btn.addEventListener('click', ()=>{
         selectedFreeDisplay = o.key;
         localStorage.setItem(FREE_DISPLAY_KEY, o.key);
@@ -723,7 +723,7 @@
       const words = LESSONS[key] || [];
       const btn = document.createElement('button');
       btn.className = 'lesson-tab' + (key === selectedLesson ? ' active' : '');
-      btn.innerHTML = `<span class="name">Lesson ${key}</span><span class="count">${words.length}개</span>`;
+      btn.innerHTML = `<span class="name">${key === selectedLesson ? '✓ ' : ''}Lesson ${key}</span><span class="count">${words.length}개</span>`;
       btn.addEventListener('click', ()=>{
         selectedLesson = key;
         localStorage.setItem(LESSON_KEY, key);
@@ -1279,7 +1279,7 @@
     DIFFICULTIES.forEach(d=>{
       const btn = document.createElement('button');
       btn.className = 'lesson-tab' + (d.key === lbSelectedDiff ? ' active' : '');
-      btn.innerHTML = `<span class="name">${d.label}</span>`;
+      btn.innerHTML = `<span class="name">${d.key === lbSelectedDiff ? '✓ ' : ''}${d.label}</span>`;
       btn.addEventListener('click', ()=>{
         lbSelectedDiff = d.key;
         renderLbTabs();
@@ -1307,7 +1307,9 @@
     filtered.forEach((r, i)=>{
       const row = document.createElement('div');
       row.className = 'history-row';
-      row.innerHTML = `<span class="history-date">${i+1}위 · ${r.name || '익명'} · Lesson ${r.lesson}</span><span class="history-stat">${r.solved}/${r.total} · ${r.score}pts${r.elapsedMs != null ? ' · ' + formatElapsed(r.elapsedMs) : ''}</span>`;
+      const d = r.date ? new Date(r.date) : null;
+      const dateStr = d ? `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}` : '';
+      row.innerHTML = `<span class="history-date">${i+1}위 · ${r.name || '익명'} · Lesson ${r.lesson}${dateStr ? ' · ' + dateStr : ''}</span><span class="history-stat">${r.solved}/${r.total} · ${r.score}pts${r.elapsedMs != null ? ' · ' + formatElapsed(r.elapsedMs) : ''}</span>`;
       list.appendChild(row);
     });
   }
