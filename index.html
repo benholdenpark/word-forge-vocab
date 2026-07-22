@@ -1343,10 +1343,10 @@
           localStorage.removeItem(PUBLISHER_KEY);
         } else {
           selectedPublisher = key;
+          selectedGrade = null;
+          selectedLesson = null;
           localStorage.setItem(PUBLISHER_KEY, key);
-          ensureValidGrade();
-          ensureValidLesson();
-          if(selectedLesson) localStorage.setItem(LESSON_KEY, selectedLesson);
+          localStorage.removeItem(LESSON_KEY);
         }
         renderSettings();
       });
