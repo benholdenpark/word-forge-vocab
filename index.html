@@ -2100,7 +2100,7 @@
 
   /* ---------------------------------------------------------------------
      Visitor counter (일일 / 총)
-     - Counts once per browser per day (not every page refresh).
+     - Counts every time the page is loaded (a simple hit counter).
      - If LEADERBOARD_ENDPOINT is set, uses the same Apps Script backend
        (needs the 'visits' handling added — see setup guide at bottom).
      - Otherwise falls back to this-browser-only counting.
@@ -2119,16 +2119,11 @@
   }
   async function trackAndRenderVisits(){
     const todayStr = new Date().toISOString().slice(0,10);
-    const lastVisit = localStorage.getItem(VISIT_LAST_KEY);
-    const isNewVisitForThisBrowser = lastVisit !== todayStr;
 
     if(LEADERBOARD_ENDPOINT){
-      if(isNewVisitForThisBrowser){
-        try{
-          await fetch(LEADERBOARD_ENDPOINT, { method:'POST', body: JSON.stringify({ type:'visit', date:new Date().toISOString() }) });
-          localStorage.setItem(VISIT_LAST_KEY, todayStr);
-        }catch(e){ /* will retry on next load */ }
-      }
+      try{
+        await fetch(LEADERBOARD_ENDPOINT, { method:'POST', body: JSON.stringify({ type:'visit', date:new Date().toISOString() }) });
+      }catch(e){ /* counter fetch below will still show existing totals */ }
       try{
         const res = await fetch(`${LEADERBOARD_ENDPOINT}?type=visits`);
         const data = await res.json();
@@ -2138,12 +2133,9 @@
       }
     } else {
       const local = loadLocalVisits();
-      if(isNewVisitForThisBrowser){
-        local.total += 1;
-        local.byDate[todayStr] = (local.byDate[todayStr] || 0) + 1;
-        localStorage.setItem(VISIT_LOCAL_KEY, JSON.stringify(local));
-        localStorage.setItem(VISIT_LAST_KEY, todayStr);
-      }
+      local.total += 1;
+      local.byDate[todayStr] = (local.byDate[todayStr] || 0) + 1;
+      localStorage.setItem(VISIT_LOCAL_KEY, JSON.stringify(local));
       renderVisitCounter(local.byDate[todayStr] || 0, local.total);
     }
   }
