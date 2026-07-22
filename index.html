@@ -239,6 +239,7 @@
   <div class="topbar">
     <div class="logo">단어<span>대장간</span></div>
     <div style="display:flex;gap:8px;">
+      <button class="icon-btn" id="btnShareApp" title="공유하기">🔗</button>
       <button class="icon-btn" id="btnLeaderboardTop" title="순위">🏆</button>
       <button class="icon-btn" id="btnHistoryTop" title="기록">📖</button>
     </div>
@@ -1962,6 +1963,18 @@
   /* ---------------------------------------------------------------------
      Share
   --------------------------------------------------------------------- */
+  function shareApp(){
+    const url = `${location.origin}${location.pathname}`;
+    const text = '단어 대장간 — 같이 영단어 연습해요!';
+    if(navigator.share){
+      navigator.share({ title:'단어 대장간', text, url }).catch(()=>{});
+    } else if(navigator.clipboard){
+      navigator.clipboard.writeText(url).then(()=>showToast('링크가 복사되었어요'));
+    } else {
+      showToast(url);
+    }
+  }
+
   function shareScore(){
     const emojiMap = { clean:'🟧', assisted:'🟨', gaveup:'⬛', unreached:'⬜' };
     const grid = state.resultsGrid.map(s=>emojiMap[s] || '⬛').join('');
@@ -2163,6 +2176,7 @@
   el('btnHistoryTop').addEventListener('click', ()=>{ renderHistory(); el('modalHistory').classList.remove('hidden'); });
   el('closeHistory').addEventListener('click', ()=>el('modalHistory').classList.add('hidden'));
   el('btnLeaderboardStart').addEventListener('click', openLeaderboard);
+  el('btnShareApp').addEventListener('click', shareApp);
   el('btnLeaderboardTop').addEventListener('click', openLeaderboard);
   el('closeLeaderboard').addEventListener('click', ()=>el('modalLeaderboard').classList.add('hidden'));
   el('btnSubmitScore').addEventListener('click', submitScoreToLeaderboard);
