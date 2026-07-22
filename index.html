@@ -23,6 +23,7 @@
     --quench-glow:#7fc4ef;
     --moss:#6fa86f;
     --plum:#8a63d2;
+    --amber:#e0a458;
     --danger:#c43b2e;
     --radius:8px;
     --font-display:'Bebas Neue', sans-serif;
@@ -94,10 +95,15 @@
   }
 
   .publisher-tabs{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
-  .grade-label{
-    font-size:12px;color:var(--quench-glow);font-weight:700;
-    margin-top:10px;margin-bottom:2px;
+  .grade-tab{
+    flex:0 0 auto;padding:8px 16px;border-radius:999px;
+    border:1.5px dashed var(--amber);background:transparent;
+    color:var(--amber);font-weight:700;
   }
+  .grade-tab .name{font-size:13px;}
+  .grade-tab.active{border-style:solid;background:var(--amber);color:#2b1a05;}
+  .grade-tab.active .name{color:#2b1a05;}
+  .grade-tab:not(.active):hover{background:rgba(224,164,88,0.12);}
   .publisher-tab{
     --pub-accent: var(--quench);
     flex:0 0 auto;padding:10px 18px;border-radius:999px;
@@ -169,6 +175,7 @@
   .slots.wrong .slot{animation:shake .4s ease;border-color:var(--danger);}
   @keyframes shake{0%,100%{transform:translateX(0);}20%{transform:translateX(-5px);}40%{transform:translateX(5px);}60%{transform:translateX(-4px);}80%{transform:translateX(4px);}}
   .slots.correct .slot{border-color:var(--quench);background:linear-gradient(180deg, var(--quench-glow), var(--quench));color:#0e2330;animation:quench .5s ease;}
+  .slots.gaveup .slot{border-color:var(--ash-dim);background:var(--iron-light);color:var(--ash-dim);}
   @keyframes quench{0%{transform:scale(1);}40%{transform:scale(1.12);}100%{transform:scale(1);}}
 
   .meaning-flash{
@@ -303,6 +310,7 @@
 
         <div class="assist-row">
           <button class="assist-btn" id="btnReveal">🔩 글자 공개<small id="revealCount">3회 남음</small></button>
+          <button class="assist-btn" id="btnGiveUp">🏳️ 포기(정답 보기)</button>
         </div>
         <button class="btn btn-ghost" id="btnPause">일시정지</button>
 
@@ -1351,8 +1359,8 @@
     if(!selectedPublisher) return;
     currentGradeOrder().forEach(grade=>{
       const btn = document.createElement('button');
-      btn.className = 'lesson-tab' + (grade === selectedGrade ? ' active' : '');
-      btn.innerHTML = `<span class="name">${grade === selectedGrade ? '✓ ' : ''}${grade}</span>`;
+      btn.className = 'grade-tab' + (grade === selectedGrade ? ' active' : '');
+      btn.innerHTML = `<span class="name">${grade === selectedGrade ? '✓ ' : ''}🎓 ${grade}</span>`;
       btn.addEventListener('click', ()=>{
         selectedGrade = grade;
         ensureValidLesson();
@@ -1668,7 +1676,7 @@
 
   function renderSlots(){
     const wrap = el('slots');
-    wrap.classList.remove('wrong','correct');
+    wrap.classList.remove('wrong','correct','gaveup');
     wrap.innerHTML = '';
     // figure out which slot indices are the last letter of a group (for phrase spacing)
     const gapAfter = new Set();
@@ -1801,7 +1809,9 @@
 
   function updateAssistButtons(){
     el('revealCount').textContent = `${state.revealsLeft}회 남음`;
-    el('btnReveal').disabled = state.revealsLeft <= 0 || state.slots.every(s=>s.value !== null);
+    const full = state.slots.every(s=>s.value !== null);
+    el('btnReveal').disabled = state.revealsLeft <= 0 || full;
+    el('btnGiveUp').disabled = full;
   }
 
   function useReveal(){
@@ -1822,6 +1832,32 @@
     renderSlots();
     updateAssistButtons();
     if(state.slots.every(s=>s.value !== null)) checkAnswer();
+  }
+
+  function giveUp(){
+    if(!state || state.slots.every(s=>s.value !== null)) return;
+    const entry = state.words[state.wordIdx];
+    const letters = entry.word.replace(/\s+/g,'').toLowerCase();
+    state.tiles.forEach(t=>{ t.used = true; });
+    state.slots.forEach((s,i)=>{ s.value = letters[i]; s.tileId = null; });
+    renderTiles();
+    renderSlots();
+    playWrongSound();
+    const wrap = el('slots');
+    wrap.classList.remove('correct','wrong');
+    wrap.classList.add('gaveup');
+    state.resultsGrid.push('gaveup');
+    state.missed.push(entry);
+    const posTag = entry.pos ? ` (${entry.pos})` : '';
+    el('meaningFlash').textContent = `${entry.word} — ${entry.meaning}${posTag}`;
+    updateAssistButtons();
+    setTimeout(()=>{
+      if(state.wordIdx + 1 >= state.words.length){
+        endGame(true);
+      } else {
+        setupWord(state.wordIdx + 1);
+      }
+    }, 900);
   }
 
   /* ---------------------------------------------------------------------
@@ -1868,7 +1904,7 @@
     el('btnSubmitScore').disabled = false;
     el('btnSubmitScore').textContent = '순위 등록';
 
-    const emojiMap = { clean:'🟧', assisted:'🟨', unreached:'⬜' };
+    const emojiMap = { clean:'🟧', assisted:'🟨', gaveup:'⬛', unreached:'⬜' };
     el('resultGrid').textContent = state.resultsGrid.map(s=>emojiMap[s] || '⬛').join('');
 
     const reviewBox = el('reviewBox');
@@ -1927,7 +1963,7 @@
      Share
   --------------------------------------------------------------------- */
   function shareScore(){
-    const emojiMap = { clean:'🟧', assisted:'🟨', unreached:'⬜' };
+    const emojiMap = { clean:'🟧', assisted:'🟨', gaveup:'⬛', unreached:'⬜' };
     const grid = state.resultsGrid.map(s=>emojiMap[s] || '⬛').join('');
     const text = `단어 대장간 Lesson ${state.lesson} — ${state.solvedCount}/${state.words.length} 완성 🔥\n${grid}\n점수: ${state.score}pts`;
     if(navigator.share){
@@ -2132,6 +2168,7 @@
   el('btnSubmitScore').addEventListener('click', submitScoreToLeaderboard);
 
   el('btnReveal').addEventListener('click', useReveal);
+  el('btnGiveUp').addEventListener('click', giveUp);
   el('btnPause').addEventListener('click', pauseGame);
   el('btnResume').addEventListener('click', resumeGame);
   el('btnRestart').addEventListener('click', restartGame);
