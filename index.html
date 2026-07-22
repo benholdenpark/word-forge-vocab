@@ -22,6 +22,7 @@
     --quench:#3e7ca8;
     --quench-glow:#7fc4ef;
     --moss:#6fa86f;
+    --plum:#8a63d2;
     --danger:#c43b2e;
     --radius:8px;
     --font-display:'Bebas Neue', sans-serif;
@@ -30,14 +31,14 @@
   }
   *{box-sizing:border-box;}
   html,body{
-    margin:0;padding:0;height:100%;
+    margin:0;padding:0;min-height:100%;
     background:
       radial-gradient(ellipse at 50% -10%, #2e2620 0%, transparent 55%),
       var(--bg);
     color:var(--ash);
     font-family:var(--font-body);
   }
-  body{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px 16px;}
+  body{display:flex;align-items:safe center;justify-content:center;min-height:100vh;padding:24px 16px;}
   @media (prefers-reduced-motion: reduce){ *{animation-duration:0.001ms !important; transition-duration:0.001ms !important;} }
   button{font-family:inherit;cursor:pointer;}
   button:focus-visible, a:focus-visible, input:focus-visible{outline:2px solid var(--ember-gold); outline-offset:2px;}
@@ -98,13 +99,14 @@
     margin-top:10px;margin-bottom:2px;
   }
   .publisher-tab{
+    --pub-accent: var(--quench);
     flex:0 0 auto;padding:10px 18px;border-radius:999px;
-    border:1.5px solid var(--quench);background:var(--quench);
-    color:#0e2330;font-weight:700;
+    border:1.5px solid var(--pub-accent);background:var(--pub-accent);
+    color:#fff;font-weight:700;
   }
-  .publisher-tab .name{font-size:14px;color:#0e2330;}
-  .publisher-tab.active{box-shadow:0 0 0 2px var(--quench-glow);}
-  .publisher-tab:hover{filter:brightness(1.08);}
+  .publisher-tab .name{font-size:14px;color:#fff;}
+  .publisher-tab.active{box-shadow:0 0 0 2px var(--pub-accent), 0 0 0 4px var(--bg-panel);}
+  .publisher-tab:hover{filter:brightness(1.1);}
 
   .setting-row{
     display:flex;align-items:center;justify-content:space-between;
@@ -246,7 +248,7 @@
       <div class="settings-section">
         <div class="section-label">교재</div>
         <div class="lesson-tabs" id="publisherTabs"></div>
-        <div class="grade-label hidden" id="gradeLabel"></div>
+        <div class="lesson-tabs hidden" id="gradeTabs" style="margin-top:8px;"></div>
         <div class="lesson-tabs hidden" id="lessonTabs" style="margin-top:8px;"></div>
       </div>
 
@@ -379,15 +381,18 @@
      pos: 품사 표시용 (동사/명사/형용사/부사 등, 없으면 빈 문자열)
 
      새 교과서를 추가하려면, 아래 PUBLISHERS 객체에 새 키를 하나 더
-     만들고 (예: "NE": { label:'NE능률', lessonOrder:[...], lessons:{...} })
+     만들고 (예: "NE": { label:'NE능률', accent:'plum', gradeOrder:[...], grades:{...} })
      PUBLISHER_ORDER 배열에도 그 키를 추가하세요.
   ====================================================================== */
   const PUBLISHERS = {
     "VS": {
       label: "Visang",
-      grade: "1학년",
-      lessonOrder: ["1","2","3","4","5","6","7","8"],
-      lessons: {
+      accent: "quench",
+      gradeOrder: ["1학년"],
+      grades: {
+        "1학년": {
+          lessonOrder: ["1","2","3","4","5","6","7","8"],
+          lessons: {
     "1": [
       {word:'already', meaning:'벌써, 이미', def:"before now, or earlier than expected", pos:'부사'},
       {word:'art', meaning:'미술, 예술', def:"the activity of creating paintings, drawings, or other visual works", pos:'명사'},
@@ -845,10 +850,360 @@
       {word:'tie', meaning:'묶다', def:"to fasten something with a string or rope", pos:'동사'},
       {word:'trust', meaning:'믿음, 신뢰', def:"a strong belief in the honesty or reliability of someone", pos:'명사'}
     ]
+          }
+        }
+      }
+    },
+    "DD(L)": {
+      label: "Doosan Donga Lee",
+      accent: "plum",
+      gradeOrder: ["2학년"],
+      grades: {
+        "2학년": {
+          lessonOrder: ["1","2","3","4","5","6","7","8"],
+          lessons: {
+    "1": [
+      {word:'actively', meaning:'적극적으로', def:"in a way that shows energy and involvement", pos:'부사'},
+      {word:'activity', meaning:'활동', def:"something that people do, especially for enjoyment or exercise", pos:'명사'},
+      {word:'challenging', meaning:'도전적인', def:"difficult in a way that tests your skill or effort", pos:'형용사'},
+      {word:'chess', meaning:'체스', def:"a board game played by two people using pieces of different types", pos:'명사'},
+      {word:'childhood', meaning:'어린 시절', def:"the time in a person's life when they are a child", pos:'명사'},
+      {word:'contest', meaning:'대회', def:"an event in which people compete to win", pos:'명사'},
+      {word:'conversation', meaning:'대화', def:"a talk between two or more people", pos:'명사'},
+      {word:'creative', meaning:'창의적인', def:"having new and original ideas", pos:'형용사'},
+      {word:'disagree', meaning:'동의하지 않다', def:"to have a different opinion from someone else", pos:'동사'},
+      {word:'easily', meaning:'쉽게', def:"without difficulty", pos:'부사'},
+      {word:'expression', meaning:'표정, 표현', def:"the look on someone's face, or a way of saying something", pos:'명사'},
+      {word:'facial', meaning:'얼굴의', def:"relating to the face", pos:'형용사'},
+      {word:'favorite', meaning:'가장 좋아하는', def:"liked more than any other", pos:'형용사'},
+      {word:'follow', meaning:'따르다', def:"to go after someone, or to act according to a rule", pos:'동사'},
+      {word:'friendly', meaning:'친절한, 상냥한', def:"kind and pleasant toward others", pos:'형용사'},
+      {word:'from time to time', meaning:'때때로', def:"sometimes, but not often", pos:'부사'},
+      {word:'gesture', meaning:'몸짓, 제스처', def:"a movement of the hand or body that expresses meaning", pos:'명사'},
+      {word:'grow', meaning:'기르다, 재배하다', def:"to cause a plant to develop, or to become larger", pos:'동사'},
+      {word:'hobby', meaning:'취미', def:"an activity you do in your free time because you enjoy it", pos:'명사'},
+      {word:'host', meaning:'(TV·라디오 프로의) 진행자', def:"a person who leads a TV or radio show", pos:'명사'},
+      {word:'improve', meaning:'향상시키다', def:"to make something better", pos:'동사'},
+      {word:'language', meaning:'언어', def:"a system of words used by people to communicate", pos:'명사'},
+      {word:'lead', meaning:'이어지다, 이끌다', def:"to guide someone, or to result in something", pos:'동사'},
+      {word:'lift', meaning:'(위로) 들어 올리다', def:"to raise something to a higher position", pos:'동사'},
+      {word:'meaningful', meaning:'의미 있는', def:"having a real purpose or importance", pos:'형용사'},
+      {word:'message', meaning:'메시지', def:"a short piece of information sent to someone", pos:'명사'},
+      {word:'nervous', meaning:'긴장한, 불안한', def:"feeling worried or anxious about something", pos:'형용사'},
+      {word:'nod', meaning:'끄덕이다', def:"to move your head up and down, usually to say yes", pos:'동사'},
+      {word:'open up', meaning:'마음을 터 놓다', def:"to start sharing your feelings honestly with someone", pos:'동사'},
+      {word:'opinion', meaning:'의견, 생각', def:"a belief or view about something", pos:'명사'},
+      {word:'other', meaning:'다른', def:"different from the one already mentioned", pos:'형용사'},
+      {word:'personal', meaning:'개인의', def:"belonging to or about a particular person", pos:'형용사'},
+      {word:'post', meaning:'게시하다', def:"to put a message or picture online for others to see", pos:'동사'},
+      {word:'respect', meaning:'존중하다, 존경하다; 존중, 존경', def:"to admire and treat someone well because of their qualities", pos:'동사'},
+      {word:'skill', meaning:'기술', def:"the ability to do something well, learned through practice", pos:'명사'},
+      {word:'sock', meaning:'양말', def:"a piece of clothing worn on the foot, inside a shoe", pos:'명사'},
+      {word:'stick out', meaning:'~을 내밀다', def:"to push a part of your body forward or out", pos:'동사'},
+      {word:'still', meaning:'가만히 있는', def:"not moving at all", pos:'형용사'},
+      {word:'tip', meaning:'조언', def:"a helpful piece of advice", pos:'명사'},
+      {word:'trouble', meaning:'어려움, 문제', def:"a difficult or worrying situation", pos:'명사'}
+    ],
+    "2": [
+      {word:'apart', meaning:'(시간·공간적으로) 떨어져', def:"separated by distance or time", pos:'부사'},
+      {word:'barely', meaning:'간신히, 가까스로', def:"only just; almost not", pos:'부사'},
+      {word:'bundle', meaning:'묶음, 꾸러미, 단', def:"a group of things tied or wrapped together", pos:'명사'},
+      {word:'character', meaning:'(책, 영화 등의) 등장인물, 성격, 특성', def:"a person in a story, or a person's personality", pos:'명사'},
+      {word:'clerk', meaning:'(가게의) 점원, 직원', def:"a person who works in a shop or office", pos:'명사'},
+      {word:'completely', meaning:'완전히, 완벽하게', def:"fully; in every way", pos:'부사'},
+      {word:'continue', meaning:'계속하다, 계속되다', def:"to keep happening or doing something without stopping", pos:'동사'},
+      {word:'cousin', meaning:'사촌', def:"the child of your aunt or uncle", pos:'명사'},
+      {word:'customer', meaning:'고객, 손님', def:"a person who buys goods or services from a shop or business", pos:'명사'},
+      {word:'design', meaning:'디자인', def:"the way something is planned to look or work", pos:'명사'},
+      {word:'eldest', meaning:'가장 나이가 많은', def:"the oldest among a group, usually siblings", pos:'형용사'},
+      {word:'entire', meaning:'전체의', def:"whole; complete", pos:'형용사'},
+      {word:'excitedly', meaning:'신이 나서, 흥분하여', def:"in a way that shows strong happy feelings", pos:'부사'},
+      {word:'feather', meaning:'깃털', def:"one of the light soft parts covering a bird's body", pos:'명사'},
+      {word:'figure out', meaning:'알아내다, 생각해 내다', def:"to understand or solve something after thinking about it", pos:'동사'},
+      {word:'fill', meaning:'채우다', def:"to make something full", pos:'동사'},
+      {word:'grab', meaning:'움켜쥐다, 붙잡다', def:"to take hold of something suddenly and firmly", pos:'동사'},
+      {word:'information', meaning:'정보', def:"facts or details about something", pos:'명사'},
+      {word:'interesting', meaning:'흥미로운, 재미있는', def:"holding your attention because it is unusual or enjoyable", pos:'형용사'},
+      {word:'leak', meaning:'새다, 새어 나오다', def:"for liquid or gas to escape through a small hole", pos:'동사'},
+      {word:'light', meaning:'빛; 불을 붙이다[켜다]', def:"brightness that lets you see things", pos:'명사'},
+      {word:'look for', meaning:'찾다, 구하다', def:"to try to find something", pos:'동사'},
+      {word:'perhaps', meaning:'아마, 어쩌면', def:"possibly; maybe", pos:'부사'},
+      {word:'physical', meaning:'물질의, 물리적인', def:"relating to the body or to things you can touch", pos:'형용사'},
+      {word:'plan', meaning:'계획하다; 계획', def:"to decide what to do in the future", pos:'동사'},
+      {word:'powerful', meaning:'힘 있는, 강한', def:"having great strength or influence", pos:'형용사'},
+      {word:'puzzled', meaning:'어리둥절한, 당혹스러운', def:"confused because you don't understand something", pos:'형용사'},
+      {word:'recommend', meaning:'추천하다', def:"to suggest that something is good or suitable", pos:'동사'},
+      {word:'recommendation', meaning:'추천', def:"a suggestion that something is good or suitable", pos:'명사'},
+      {word:'relationship', meaning:'관계', def:"the way two people or things are connected", pos:'명사'},
+      {word:'reply', meaning:'대답하다, 응답하다', def:"to give an answer to someone", pos:'동사'},
+      {word:'reward', meaning:'보상', def:"something given in return for good behavior or effort", pos:'명사'},
+      {word:'sigh', meaning:'한숨을 쉬다', def:"to let out a long, deep breath, often showing tiredness or sadness", pos:'동사'},
+      {word:'silver', meaning:'은색의; 은', def:"having the color of the shiny gray metal silver", pos:'형용사'},
+      {word:'straw', meaning:'짚, 밀짚', def:"dry cut stalks of grain plants", pos:'명사'},
+      {word:'succeed', meaning:'성공하다', def:"to achieve what you were trying to do", pos:'동사'},
+      {word:'take up', meaning:'(시간·공간을) 차지하다', def:"to use an amount of time or space", pos:'동사'},
+      {word:'used to', meaning:'~하곤 했다', def:"did something regularly in the past but not anymore", pos:'조동사'},
+      {word:'useful', meaning:'유용한', def:"helping to do or achieve something", pos:'형용사'},
+      {word:'yell', meaning:'소리치다, 소리 지르다', def:"to shout loudly", pos:'동사'}
+    ],
+    "3": [
+      {word:'ability', meaning:'능력', def:"the power or skill to do something", pos:'명사'},
+      {word:'according to', meaning:'~에 따라', def:"as stated by or based on", pos:'전치사'},
+      {word:'advantage', meaning:'이점, 유리한 점', def:"something that helps you succeed or gives you a better chance", pos:'명사'},
+      {word:'block', meaning:'막다, 방해하다', def:"to stop something from moving or happening", pos:'동사'},
+      {word:'camouflage', meaning:'위장; 위장하다', def:"coloring or a pattern that helps something hide by blending in", pos:'명사'},
+      {word:'caring', meaning:'배려하는', def:"showing kindness and concern for others", pos:'형용사'},
+      {word:'certainly', meaning:'확실히, 틀림없이', def:"without doubt; definitely", pos:'부사'},
+      {word:'coral reef', meaning:'산호초', def:"a structure in the ocean made of coral", pos:'명사'},
+      {word:'create', meaning:'만들어 내다, 창조하다', def:"to make something new", pos:'동사'},
+      {word:'curly', meaning:'곱슬머리의', def:"having hair that forms curves or rings", pos:'형용사'},
+      {word:'danger', meaning:'위험', def:"the possibility of harm or injury", pos:'명사'},
+      {word:'environment', meaning:'(자연) 환경, (주변의) 환경', def:"the natural world, or the conditions around a person or thing", pos:'명사'},
+      {word:'escape', meaning:'달아나다, 도망치다', def:"to get away from a dangerous or unwanted place", pos:'동사'},
+      {word:'everywhere', meaning:'어디든지', def:"in all places", pos:'부사'},
+      {word:'fool', meaning:'속이다', def:"to trick someone into believing something false", pos:'동사'},
+      {word:'fur', meaning:'(동물의) 털', def:"the soft thick hair that covers many animals", pos:'명사'},
+      {word:'hop', meaning:'깡충깡충 뛰다', def:"to jump on one or both feet with short movements", pos:'동사'},
+      {word:'huge', meaning:'막대한[엄청난], 거대한', def:"extremely large in size or amount", pos:'형용사'},
+      {word:'in a while', meaning:'한동안', def:"for some period of time", pos:'부사'},
+      {word:'invisible', meaning:'눈에 보이지 않는', def:"not able to be seen", pos:'형용사'},
+      {word:'look', meaning:'외모, 겉모습, 생김새', def:"the way someone or something appears", pos:'명사'},
+      {word:'match', meaning:'맞추다, 어울리다, 맞다', def:"to be the same as or go well with something else", pos:'동사'},
+      {word:'mountain hare', meaning:'고산토끼', def:"a type of hare that lives in cold mountain areas", pos:'명사'},
+      {word:'playful', meaning:'장난기 많은', def:"full of fun and energy; liking to play", pos:'형용사'},
+      {word:'predator', meaning:'포식자, 포식 동물', def:"an animal that hunts and eats other animals", pos:'명사'},
+      {word:'protect', meaning:'보호하다', def:"to keep someone or something safe from harm", pos:'동사'},
+      {word:'quietly', meaning:'조용히', def:"without making much noise", pos:'부사'},
+      {word:'round', meaning:'둥근, 원형의', def:"shaped like a circle or ball", pos:'형용사'},
+      {word:'scan', meaning:'살피다, 훑어보다', def:"to look over something carefully or quickly", pos:'동사'},
+      {word:'seem', meaning:'~처럼 보이다, ~인 것 같다', def:"to appear to be true based on what you observe", pos:'동사'},
+      {word:'spot', meaning:'발견하다, 찾다', def:"to notice or find something, often by looking carefully", pos:'동사'},
+      {word:'spread', meaning:'퍼뜨리다, 펼치다', def:"to open out something, or make it cover a wider area", pos:'동사'},
+      {word:'stick', meaning:'붙이다', def:"to attach something to a surface", pos:'동사'},
+      {word:'straight', meaning:'곧은, 일직선의, (머리털이) 곱슬거리지 않는', def:"not curved or bent", pos:'형용사'},
+      {word:'stylish', meaning:'멋진, 스타일이 좋은', def:"fashionable and attractive", pos:'형용사'},
+      {word:'surroundings', meaning:'주변 환경', def:"the area and conditions around a place or person", pos:'명사'},
+      {word:'trunk', meaning:'(코끼리의) 코', def:"the long nose of an elephant", pos:'명사'},
+      {word:'turn', meaning:'변하다', def:"to change into a different state", pos:'동사'},
+      {word:'view', meaning:'시야, 경관, 전망', def:"what you can see from a certain place", pos:'명사'},
+      {word:'wild', meaning:'야생', def:"a natural environment not controlled by humans", pos:'명사'}
+    ],
+    "4": [
+      {word:'airport', meaning:'공항', def:"a place where airplanes take off and land", pos:'명사'},
+      {word:'between', meaning:'(위치가) 사이에', def:"in the space separating two things", pos:'전치사'},
+      {word:'bookstore', meaning:'서점', def:"a shop where books are sold", pos:'명사'},
+      {word:'British', meaning:'영국의', def:"relating to Britain or its people", pos:'형용사'},
+      {word:'culture', meaning:'문화', def:"the customs, art, and way of life of a group of people", pos:'명사'},
+      {word:'dish', meaning:'접시, 요리, 음식', def:"a flat container for food, or a particular kind of food", pos:'명사'},
+      {word:'experience', meaning:'경험; 경험하다', def:"something that happens to you that you learn from", pos:'명사'},
+      {word:'far', meaning:'(거리적으로) 먼, 멀리 떨어진', def:"a long distance away", pos:'형용사'},
+      {word:'fifth', meaning:'다섯 번째의', def:"coming after the fourth in order", pos:'형용사'},
+      {word:'film', meaning:'촬영하다, 찍다', def:"to record moving pictures with a camera", pos:'동사'},
+      {word:'flight', meaning:'비행', def:"a trip made by airplane", pos:'명사'},
+      {word:'get off', meaning:'(교통수단에서) 내리다, 하차하다', def:"to leave a vehicle such as a bus or train", pos:'동사'},
+      {word:'get on', meaning:'타다, 올라타다', def:"to enter a vehicle such as a bus or train", pos:'동사'},
+      {word:'guard', meaning:'경비 요원, 근위병', def:"a person whose job is to protect a place or person", pos:'명사'},
+      {word:'insect', meaning:'곤충', def:"a small animal with six legs, like an ant or bee", pos:'명사'},
+      {word:'market', meaning:'시장', def:"a place where goods are bought and sold", pos:'명사'},
+      {word:'meal', meaning:'식사', def:"food eaten at a particular time, such as breakfast or dinner", pos:'명사'},
+      {word:'move', meaning:'움직이다, 이동하다', def:"to go from one place to another", pos:'동사'},
+      {word:'museum', meaning:'박물관', def:"a building where interesting objects are displayed to the public", pos:'명사'},
+      {word:'next to', meaning:'~ 옆에', def:"right beside something", pos:'전치사'},
+      {word:'palace', meaning:'궁전', def:"a large, grand house where a king, queen, or ruler lives", pos:'명사'},
+      {word:'plate', meaning:'접시', def:"a flat dish used for eating food", pos:'명사'},
+      {word:'platform', meaning:'(역의) 승강장', def:"the raised area beside train tracks where passengers wait", pos:'명사'},
+      {word:'pretend', meaning:'~인 척하다, ~라고 가장[상상]하다', def:"to act as if something is true when it is not", pos:'동사'},
+      {word:'return', meaning:'반납하다', def:"to give something back", pos:'동사'},
+      {word:'secret', meaning:'비밀의', def:"kept hidden from others", pos:'형용사'},
+      {word:'selfie', meaning:'셀카(스마트폰 등으로 찍은 자신의 사진)', def:"a photo you take of yourself, often with a phone", pos:'명사'},
+      {word:'sign', meaning:'표지판, 간판', def:"a board with words or symbols that gives information", pos:'명사'},
+      {word:'since', meaning:'~한 이후로, ~한 때로부터; ~부터, ~이후', def:"from a particular time in the past until now", pos:'접속사'},
+      {word:'station', meaning:'역, 정거장', def:"a building where trains or buses stop for passengers", pos:'명사'},
+      {word:'statue', meaning:'조각상', def:"a figure of a person or animal made of stone or metal", pos:'명사'},
+      {word:'stop', meaning:'정류장', def:"a place where a bus or train regularly stops", pos:'명사'},
+      {word:'strange', meaning:'이상한', def:"unusual or unfamiliar", pos:'형용사'},
+      {word:'subway', meaning:'지하철', def:"an underground train system in a city", pos:'명사'},
+      {word:'traditional', meaning:'전통의, 전통적인', def:"following long-established customs or beliefs", pos:'형용사'},
+      {word:'traffic', meaning:'교통, 교통량', def:"the vehicles moving on a road", pos:'명사'},
+      {word:'transportation', meaning:'운송, 교통수단', def:"a way of moving people or goods from one place to another", pos:'명사'},
+      {word:'tunnel', meaning:'터널, 굴', def:"a long passage built underground or through a mountain", pos:'명사'},
+      {word:'underground', meaning:'지하에서; 지하의', def:"below the surface of the ground", pos:'부사'},
+      {word:'wave', meaning:'파도', def:"a moving ridge of water on the surface of the sea", pos:'명사'}
+    ],
+    "5": [
+      {word:'air conditioner', meaning:'에어컨', def:"a machine that cools the air in a room", pos:'명사'},
+      {word:'all the time', meaning:'내내, 줄곧', def:"continuously, without stopping", pos:'부사'},
+      {word:'campaign', meaning:'캠페인, (조직적인) 운동[활동]', def:"a planned set of activities aimed at achieving a goal", pos:'명사'},
+      {word:'canal', meaning:'운하, 수로', def:"a man-made waterway for boats or irrigation", pos:'명사'},
+      {word:'do one\'s best', meaning:'최선을 다하다', def:"to try as hard as you can", pos:'동사'},
+      {word:'exchange', meaning:'교환하다', def:"to give something and receive something else in return", pos:'동사'},
+      {word:'farm', meaning:'농장', def:"an area of land used for growing crops or raising animals", pos:'명사'},
+      {word:'find out', meaning:'알게 되다, 알아내다', def:"to discover information about something", pos:'동사'},
+      {word:'flea market', meaning:'벼룩시장', def:"a market where people sell secondhand goods", pos:'명사'},
+      {word:'flood', meaning:'침수시키다; 홍수', def:"to cover an area with water that isn't normally there", pos:'동사'},
+      {word:'global', meaning:'지구의, 세계적인', def:"relating to the whole world", pos:'형용사'},
+      {word:'greenhouse gas', meaning:'온실가스', def:"a gas that traps heat in the Earth's atmosphere", pos:'명사'},
+      {word:'habit', meaning:'습관, 버릇', def:"something you do regularly, often without thinking", pos:'명사'},
+      {word:'historic', meaning:'역사적인, 역사적으로 유명한', def:"important in history", pos:'형용사'},
+      {word:'increase', meaning:'증가하다, 증가시키다', def:"to become or make something larger in amount", pos:'동사'},
+      {word:'item', meaning:'물품, 품목', def:"a single thing among a group of things", pos:'명사'},
+      {word:'melt', meaning:'녹다, 녹이다', def:"to change from a solid to a liquid because of heat", pos:'동사'},
+      {word:'nearby', meaning:'가까운, 가까이의', def:"not far away", pos:'형용사'},
+      {word:'part', meaning:'역할, 부분', def:"one piece of a larger whole, or a role someone plays", pos:'명사'},
+      {word:'pass', meaning:'배출하다, 배설하다, 통과하다', def:"to send out, or to go through or beyond something", pos:'동사'},
+      {word:'pencil case', meaning:'필통', def:"a small case used to hold pencils and pens", pos:'명사'},
+      {word:'planet', meaning:'행성', def:"a large round object in space that orbits a star", pos:'명사'},
+      {word:'plant', meaning:'(나무·씨앗 등을) 심다; 식물', def:"to put a seed in the ground so it can grow", pos:'동사'},
+      {word:'pollution', meaning:'오염', def:"harmful substances that damage the environment", pos:'명사'},
+      {word:'recently', meaning:'최근에', def:"not long ago", pos:'부사'},
+      {word:'recycle', meaning:'재활용하다', def:"to process used materials so they can be used again", pos:'동사'},
+      {word:'reduce', meaning:'줄이다, 낮추다', def:"to make something smaller in size or amount", pos:'동사'},
+      {word:'reusable', meaning:'재사용할 수 있는', def:"able to be used again", pos:'형용사'},
+      {word:'reuse', meaning:'재사용하다', def:"to use something again instead of throwing it away", pos:'동사'},
+      {word:'rise', meaning:'오르다, 올라가다', def:"to move upward or increase", pos:'동사'},
+      {word:'scary', meaning:'무서운, 겁나는', def:"causing fear", pos:'형용사'},
+      {word:'situation', meaning:'상황', def:"the set of circumstances at a particular time", pos:'명사'},
+      {word:'slow down', meaning:'(속도∙진행을) 늦추다', def:"to reduce speed or slow the pace of something", pos:'동사'},
+      {word:'terrible', meaning:'매우 나쁜, 끔찍한', def:"very bad or unpleasant", pos:'형용사'},
+      {word:'throw out', meaning:'버리다', def:"to get rid of something you no longer want", pos:'동사'},
+      {word:'tourist', meaning:'관광객', def:"a person who travels to visit places for pleasure", pos:'명사'},
+      {word:'underline', meaning:'밑줄을 치다[긋다]', def:"to draw a line under a word or phrase", pos:'동사'},
+      {word:'underwater', meaning:'물속의, 수중의', def:"existing or happening below the surface of water", pos:'형용사'},
+      {word:'upcycling', meaning:'업사이클링(재활용품을 이용하여 새로운 물건을 만드는 것)', def:"turning waste materials into new products of higher value", pos:'명사'},
+      {word:'waste', meaning:'쓰레기', def:"material that is no longer wanted and is thrown away", pos:'명사'}
+    ],
+    "6": [
+      {word:'advice', meaning:'조언, 충고', def:"a suggestion about what someone should do", pos:'명사'},
+      {word:'almost', meaning:'거의', def:"very nearly, but not completely", pos:'부사'},
+      {word:'article', meaning:'(신문·잡지의) 글, 기사', def:"a piece of writing in a newspaper or magazine", pos:'명사'},
+      {word:'blow', meaning:'(바람이) 불다', def:"for wind to move", pos:'동사'},
+      {word:'captain', meaning:'(스포츠 팀의) 주장', def:"the leader of a sports team", pos:'명사'},
+      {word:'cheer', meaning:'응원, 환호; 응원하다, 환호하다', def:"a shout of support or joy", pos:'명사'},
+      {word:'condition', meaning:'상태', def:"the state that something or someone is in", pos:'명사'},
+      {word:'crowd', meaning:'관중, 군중, 무리', def:"a large group of people gathered together", pos:'명사'},
+      {word:'difference', meaning:'차이, 다름', def:"the way in which two things are not the same", pos:'명사'},
+      {word:'during', meaning:'~ 동안', def:"throughout a particular period of time", pos:'전치사'},
+      {word:'each', meaning:'각각의, 각자의', def:"every one of a group, considered separately", pos:'형용사'},
+      {word:'exam', meaning:'시험', def:"a formal test of knowledge or ability", pos:'명사'},
+      {word:'flip', meaning:'뒤집다', def:"to turn something over quickly", pos:'동사'},
+      {word:'grow', meaning:'자라다, 성장하다, 재배하다', def:"to increase in size or develop", pos:'동사'},
+      {word:'halftime', meaning:'(스포츠) 중간 휴식', def:"the break between the two halves of a sports game", pos:'명사'},
+      {word:'headline', meaning:'(신문 기사의) 표제', def:"the title of a newspaper article, printed in large letters", pos:'명사'},
+      {word:'healthcare', meaning:'건강 관리', def:"services that help people stay healthy or treat illness", pos:'명사'},
+      {word:'lately', meaning:'최근에', def:"in the recent past", pos:'부사'},
+      {word:'lower', meaning:'낮추다', def:"to make something less in amount or position", pos:'동사'},
+      {word:'manage', meaning:'관리하다, 다루다', def:"to be in charge of something, or to succeed in doing it", pos:'동사'},
+      {word:'messy', meaning:'지저분한', def:"not neat or tidy", pos:'형용사'},
+      {word:'money diary', meaning:'용돈기입장', def:"a notebook used to record how you spend and save money", pos:'명사'},
+      {word:'perform', meaning:'공연하다', def:"to entertain an audience by acting, singing, or playing music", pos:'동사'},
+      {word:'practice', meaning:'연습하다', def:"to repeat an activity to become better at it", pos:'동사'},
+      {word:'principal', meaning:'교장', def:"the head of a school", pos:'명사'},
+      {word:'proud', meaning:'자랑스러운', def:"feeling pleased about an achievement", pos:'형용사'},
+      {word:'quarter', meaning:'쿼터(농구 등 경기 시간의 4분의 1), 4분의 1', def:"one of four equal parts of something", pos:'명사'},
+      {word:'recent', meaning:'최근의', def:"happening not long ago", pos:'형용사'},
+      {word:'result', meaning:'결과', def:"something that happens because of something else", pos:'명사'},
+      {word:'save', meaning:'(돈을) 모으다, 저축하다', def:"to keep money instead of spending it", pos:'동사'},
+      {word:'school nurse', meaning:'보건 선생님', def:"a nurse who works at a school taking care of students' health", pos:'명사'},
+      {word:'scream', meaning:'소리치다', def:"to make a loud, high sound because of fear or excitement", pos:'동사'},
+      {word:'spend', meaning:'소비하다, (돈을) 쓰다', def:"to use money to pay for something", pos:'동사'},
+      {word:'spread', meaning:'퍼뜨리다', def:"to make something reach a wider area or more people", pos:'동사'},
+      {word:'stay up', meaning:'안 자다, 깨어 있다', def:"to remain awake instead of going to sleep", pos:'동사'},
+      {word:'stressed', meaning:'스트레스를 받는[느끼는]', def:"feeling worried or under pressure", pos:'형용사'},
+      {word:'survey', meaning:'설문 조사', def:"a set of questions asked to many people to gather information", pos:'명사'},
+      {word:'teens', meaning:'십 대', def:"the years of a person's life from 13 to 19", pos:'명사'},
+      {word:'tidy', meaning:'깔끔한, 잘 정돈된', def:"neat and well organized", pos:'형용사'},
+      {word:'trust', meaning:'믿다, 신뢰하다', def:"to believe that someone is honest or reliable", pos:'동사'}
+    ],
+    "7": [
+      {word:'actually', meaning:'실제로, 정말로, 사실은', def:"used to say what is really true", pos:'부사'},
+      {word:'ancient', meaning:'고대의', def:"belonging to a time long ago in history", pos:'형용사'},
+      {word:'bean', meaning:'콩', def:"a small seed from certain plants, eaten as food", pos:'명사'},
+      {word:'behind', meaning:'(위치) ~ 뒤에, ~ 배후에, 숨겨져 있는', def:"at the back of something", pos:'전치사'},
+      {word:'break', meaning:'부러지다, 부수다', def:"to separate into pieces because of force", pos:'동사'},
+      {word:'cancel', meaning:'취소하다', def:"to decide that a planned event will not happen", pos:'동사'},
+      {word:'catchy', meaning:'기억하기 쉬운', def:"easy to remember, especially a tune or phrase", pos:'형용사'},
+      {word:'communicate', meaning:'의사소통을 하다', def:"to share information or feelings with someone", pos:'동사'},
+      {word:'complete', meaning:'완료하다, 완성하다', def:"to finish making or doing something", pos:'동사'},
+      {word:'disappointed', meaning:'실망한, 낙담한', def:"feeling sad because something did not happen as hoped", pos:'형용사'},
+      {word:'earworm', meaning:'자꾸 귓전에 맴도는 곡조', def:"a song or tune that keeps repeating in your mind", pos:'명사'},
+      {word:'example', meaning:'예, 보기', def:"something that shows what a group of things is like", pos:'명사'},
+      {word:'expression', meaning:'표현', def:"a way of saying or showing something", pos:'명사'},
+      {word:'go away', meaning:'없어지다, (떠나)가다', def:"to leave a place, or to disappear", pos:'동사'},
+      {word:'go viral', meaning:'입소문이 나다', def:"to spread very quickly online to many people", pos:'동사'},
+      {word:'idiom', meaning:'숙어, 관용구', def:"a phrase whose meaning is different from its individual words", pos:'명사'},
+      {word:'later', meaning:'나중에, 이후에', def:"at a time after the present", pos:'부사'},
+      {word:'latest', meaning:'최신의, 최근의', def:"the most recent", pos:'형용사'},
+      {word:'neck and neck', meaning:'막상막하로', def:"very close in a competition, with neither side clearly ahead", pos:'부사'},
+      {word:'offer', meaning:'제의, 제안; 제안하다', def:"something you propose to give or do for someone", pos:'명사'},
+      {word:'over time', meaning:'시간이 지나면서', def:"gradually, as time passes", pos:'부사'},
+      {word:'phrase', meaning:'어구, 구절', def:"a small group of words that go together", pos:'명사'},
+      {word:'play', meaning:'연극, 희곡, 놀이; 놀다', def:"a story performed live on stage", pos:'명사'},
+      {word:'politely', meaning:'예의 바르게, 공손하게, 정중하게', def:"in a way that shows good manners", pos:'부사'},
+      {word:'prepare', meaning:'준비하다', def:"to get something ready for future use", pos:'동사'},
+      {word:'public', meaning:'공공의, 공중의, 대중의', def:"relating to or available to people in general", pos:'형용사'},
+      {word:'refrigerator', meaning:'냉장고', def:"an appliance used to keep food cold", pos:'명사'},
+      {word:'refuse', meaning:'(요청·부탁 등을) 거절하다, 거부하다', def:"to say no to something that is asked or offered", pos:'동사'},
+      {word:'repeat', meaning:'반복하다', def:"to say or do something again", pos:'동사'},
+      {word:'reveal', meaning:'드러내다, 폭로하다', def:"to make something known that was hidden", pos:'동사'},
+      {word:'spill', meaning:'쏟다, 흘리다', def:"to accidentally let a liquid flow out of a container", pos:'동사'},
+      {word:'success', meaning:'성공', def:"the achievement of a goal", pos:'명사'},
+      {word:'successfully', meaning:'성공적으로', def:"in a way that achieves a desired result", pos:'부사'},
+      {word:'technology', meaning:'(과학) 기술', def:"the use of science to create tools and machines", pos:'명사'},
+      {word:'viewer', meaning:'시청자', def:"a person who watches something, like TV or a video", pos:'명사'},
+      {word:'vote', meaning:'투표하다; 투표', def:"to choose an option by casting a formal vote", pos:'동사'},
+      {word:'widely', meaning:'널리', def:"over a large area, or by many people", pos:'부사'},
+      {word:'wish', meaning:'~을 빌다, 바라다, 소원하다', def:"to want something to happen, especially something unlikely", pos:'동사'},
+      {word:'wonder', meaning:'경이, 경탄, 놀라움', def:"a feeling of surprise and admiration", pos:'명사'},
+      {word:'zipper', meaning:'지퍼', def:"a fastener with two rows of teeth that lock together", pos:'명사'}
+    ],
+    "8": [
+      {word:'along', meaning:'~을 따라', def:"moving beside or through the length of something", pos:'전치사'},
+      {word:'amusement park', meaning:'놀이공원', def:"a park with rides and games for entertainment", pos:'명사'},
+      {word:'be made up of', meaning:'~로 구성되다', def:"to consist of certain parts", pos:'동사'},
+      {word:'both', meaning:'~도, 모두; 둘 다, 양쪽', def:"the two things together, not just one", pos:'형용사'},
+      {word:'carnival', meaning:'카니발, 축제', def:"a public event with music, games, and entertainment", pos:'명사'},
+      {word:'castle', meaning:'성', def:"a large building built long ago to protect against attack", pos:'명사'},
+      {word:'drink', meaning:'음료, 마실 것', def:"a liquid that people consume", pos:'명사'},
+      {word:'fantastic', meaning:'환상적인, 굉장한, 멋진', def:"extremely good; wonderful", pos:'형용사'},
+      {word:'foreigner', meaning:'외국인', def:"a person from another country", pos:'명사'},
+      {word:'free', meaning:'무료의', def:"costing no money", pos:'형용사'},
+      {word:'hold', meaning:'열다, 개최하다', def:"to organize and carry out an event", pos:'동사'},
+      {word:'icy', meaning:'얼음의, 얼음으로 덮인', def:"covered with ice, or very cold", pos:'형용사'},
+      {word:'look forward to', meaning:'~을 기대하다', def:"to feel happy and excited about something that will happen", pos:'동사'},
+      {word:'make it', meaning:'해내다, 성공하다', def:"to succeed in doing something", pos:'동사'},
+      {word:'marshmallow', meaning:'마시멜로', def:"a soft, sweet white candy", pos:'명사'},
+      {word:'mascot', meaning:'마스코트', def:"a person, animal, or object used as a symbol of a group", pos:'명사'},
+      {word:'memory', meaning:'기억', def:"something you remember from the past", pos:'명사'},
+      {word:'miss', meaning:'놓치다', def:"to fail to catch, see, or attend something", pos:'동사'},
+      {word:'muddy', meaning:'진흙투성이의', def:"covered with soft wet earth", pos:'형용사'},
+      {word:'narrow', meaning:'좁은', def:"having a small width", pos:'형용사'},
+      {word:'official', meaning:'공식적인', def:"approved by an authority; formal", pos:'형용사'},
+      {word:'participate', meaning:'참여하다, 참가하다', def:"to take part in an activity", pos:'동사'},
+      {word:'performance', meaning:'공연, 연주', def:"a show performed for an audience", pos:'명사'},
+      {word:'pick', meaning:'(과일 등을) 따다', def:"to pull a fruit or flower off a plant", pos:'동사'},
+      {word:'place', meaning:'놓다, 두다; 장소', def:"to put something in a particular position", pos:'동사'},
+      {word:'pour', meaning:'붓다, 따르다', def:"to make a liquid flow out of a container", pos:'동사'},
+      {word:'push', meaning:'밀다', def:"to press something firmly to move it away from you", pos:'동사'},
+      {word:'race', meaning:'경주; 경주하다', def:"a competition to see who is fastest", pos:'명사'},
+      {word:'roast', meaning:'굽다, 구워서 요리하다', def:"to cook food using dry heat, often over a fire", pos:'동사'},
+      {word:'roll', meaning:'굴리다', def:"to make something move by turning it over and over", pos:'동사'},
+      {word:'sculpture', meaning:'조각, 조각품', def:"a piece of art made by carving or shaping material", pos:'명사'},
+      {word:'sled', meaning:'썰매', def:"a vehicle used for sliding over snow or ice", pos:'명사'},
+      {word:'slide', meaning:'미끄러지다; 미끄럼틀', def:"to move smoothly over a surface", pos:'동사'},
+      {word:'stamp', meaning:'스탬프, 도장', def:"a small device or mark used to print a design on paper", pos:'명사'},
+      {word:'stuck', meaning:'갇힌, (~에 빠져) 움직일 수 없는', def:"unable to move or get free", pos:'형용사'},
+      {word:'surround', meaning:'둘러싸다, 에워싸다', def:"to be all around something", pos:'동사'},
+      {word:'taste', meaning:'맛보다', def:"to test the flavor of food by eating a small amount", pos:'동사'},
+      {word:'through', meaning:'~을 통해, ~을 지나서', def:"moving from one side of something to the other", pos:'전치사'},
+      {word:'treat', meaning:'간식', def:"a special food or thing given as a small pleasure", pos:'명사'},
+      {word:'unforgettable', meaning:'잊지 못할, 잊을 수 없는', def:"so good or memorable that you cannot forget it", pos:'형용사'}
+    ]
+          }
+        }
       }
     }
   };
-  const PUBLISHER_ORDER = ["VS"];
+  const PUBLISHER_ORDER = ["VS", "DD(L)"];
   const DIFFICULTIES = [
     { key:"free", label:"자유" },
     { key:"beginner", label:"초보자" },
@@ -922,14 +1277,28 @@
      Publisher + lesson + difficulty + round-length selection
   --------------------------------------------------------------------- */
   let selectedPublisher = null;
-
+  let selectedGrade = null;
   let selectedLesson = localStorage.getItem(LESSON_KEY);
 
+  function currentGradeOrder(){
+    return selectedPublisher ? (PUBLISHERS[selectedPublisher].gradeOrder || []) : [];
+  }
+  function currentGradesMap(){
+    return selectedPublisher ? (PUBLISHERS[selectedPublisher].grades || {}) : {};
+  }
+  function ensureValidGrade(){
+    const order = currentGradeOrder();
+    if(!selectedGrade || !order.includes(selectedGrade)){
+      selectedGrade = order[0] || null;
+    }
+  }
   function currentLessonOrder(){
-    return selectedPublisher ? PUBLISHERS[selectedPublisher].lessonOrder : [];
+    const grades = currentGradesMap();
+    return selectedGrade ? (grades[selectedGrade]?.lessonOrder || []) : [];
   }
   function currentLessonsMap(){
-    return selectedPublisher ? PUBLISHERS[selectedPublisher].lessons : {};
+    const grades = currentGradesMap();
+    return selectedGrade ? (grades[selectedGrade]?.lessons || {}) : {};
   }
   function ensureValidLesson(){
     const order = currentLessonOrder();
@@ -938,7 +1307,6 @@
       selectedLesson = order.find(k=>(lessons[k]||[]).length > 0) || order[0] || null;
     }
   }
-  if(selectedPublisher) ensureValidLesson();
 
   let selectedDifficulty = localStorage.getItem(DIFF_KEY) || 'beginner';
   if(!DIFFICULTIES.some(d=>d.key === selectedDifficulty)) selectedDifficulty = 'beginner';
@@ -956,18 +1324,39 @@
       const active = key === selectedPublisher;
       const btn = document.createElement('button');
       btn.className = 'publisher-tab' + (active ? ' active' : '');
+      btn.style.setProperty('--pub-accent', `var(--${pub.accent || 'quench'})`);
       btn.innerHTML = `<span class="name">📚 ${key}${active ? ' · ' + pub.label : ''}</span>`;
       btn.addEventListener('click', ()=>{
         if(selectedPublisher === key){
           // clicking the already-active publisher collapses it
           selectedPublisher = null;
+          selectedGrade = null;
           localStorage.removeItem(PUBLISHER_KEY);
         } else {
           selectedPublisher = key;
           localStorage.setItem(PUBLISHER_KEY, key);
+          ensureValidGrade();
           ensureValidLesson();
           if(selectedLesson) localStorage.setItem(LESSON_KEY, selectedLesson);
         }
+        renderSettings();
+      });
+      wrap.appendChild(btn);
+    });
+  }
+
+  function renderGradeTabs(){
+    const wrap = el('gradeTabs');
+    wrap.innerHTML = '';
+    if(!selectedPublisher) return;
+    currentGradeOrder().forEach(grade=>{
+      const btn = document.createElement('button');
+      btn.className = 'lesson-tab' + (grade === selectedGrade ? ' active' : '');
+      btn.innerHTML = `<span class="name">${grade === selectedGrade ? '✓ ' : ''}${grade}</span>`;
+      btn.addEventListener('click', ()=>{
+        selectedGrade = grade;
+        ensureValidLesson();
+        if(selectedLesson) localStorage.setItem(LESSON_KEY, selectedLesson);
         renderSettings();
       });
       wrap.appendChild(btn);
@@ -1066,18 +1455,24 @@
     renderFreeDisplayTabs();
     renderCaseTabs();
 
-    const wrap = el('lessonTabs');
     const noPublisher = !selectedPublisher;
-    wrap.classList.toggle('hidden', noPublisher);
-    el('gradeLabel').classList.toggle('hidden', noPublisher);
-    if(!noPublisher){
-      const grade = PUBLISHERS[selectedPublisher].grade || '';
-      el('gradeLabel').textContent = grade;
-    }
-    el('freeControls').classList.toggle('hidden', noPublisher || selectedDifficulty !== 'free');
-    el('fixedInfo').classList.toggle('hidden', noPublisher || selectedDifficulty === 'free');
-
+    el('gradeTabs').classList.toggle('hidden', noPublisher);
     if(noPublisher){
+      el('lessonTabs').classList.add('hidden');
+      el('freeControls').classList.add('hidden');
+      el('fixedInfo').classList.add('hidden');
+      el('btnPlay').disabled = true;
+      el('btnRelax').disabled = true;
+      return;
+    }
+    renderGradeTabs();
+
+    const noGrade = !selectedGrade;
+    el('lessonTabs').classList.toggle('hidden', noGrade);
+    el('freeControls').classList.toggle('hidden', noGrade || selectedDifficulty !== 'free');
+    el('fixedInfo').classList.toggle('hidden', noGrade || selectedDifficulty === 'free');
+
+    if(noGrade){
       el('btnPlay').disabled = true;
       el('btnRelax').disabled = true;
       return;
