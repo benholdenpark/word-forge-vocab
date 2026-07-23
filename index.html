@@ -152,6 +152,14 @@
   .publisher-tab.active .name{font-size:13px;}
   .publisher-tab:hover{filter:brightness(1.1);}
 
+  .pub-select{
+    width:100%;padding:12px 14px;border-radius:var(--radius);
+    border:1.5px solid var(--quench);background:var(--bg-elevated);
+    color:var(--ash);font-weight:700;font-size:14px;font-family:inherit;
+    margin-bottom:16px;
+  }
+  .pub-select:focus-visible{outline:2px solid var(--quench-glow);outline-offset:2px;}
+
   .setting-row{
     display:flex;align-items:center;justify-content:space-between;
     background:var(--bg-elevated);border:1px solid var(--iron);
@@ -310,7 +318,9 @@
 
       <div class="settings-section">
         <div class="section-label">교재</div>
-        <div class="lesson-tabs" id="publisherTabs"></div>
+        <select class="pub-select" id="publisherTabs">
+          <option value="">📚 교재를 선택하세요</option>
+        </select>
         <div class="lesson-tabs hidden" id="gradeTabs" style="margin-top:8px;"></div>
         <div class="lesson-tabs hidden" id="lessonTabs" style="margin-top:8px;"></div>
       </div>
@@ -2270,33 +2280,32 @@
   }
 
   function renderPublisherTabs(){
-    const wrap = el('publisherTabs');
-    wrap.innerHTML = '';
+    const sel = el('publisherTabs');
+    sel.innerHTML = '<option value="">📚 교재를 선택하세요</option>';
     PUBLISHER_ORDER.forEach(key=>{
       const pub = PUBLISHERS[key];
-      const active = key === selectedPublisher;
-      const btn = document.createElement('button');
-      btn.className = 'publisher-tab' + (active ? ' active' : '');
-      btn.style.setProperty('--pub-accent', `var(--${pub.accent || 'quench'})`);
-      btn.innerHTML = `<span class="name">📚 ${key}${active ? ' · ' + pub.label : ''}</span>`;
-      btn.addEventListener('click', ()=>{
-        if(selectedPublisher === key){
-          // clicking the already-active publisher collapses it
-          selectedPublisher = null;
-          selectedGrade = null;
-          localStorage.removeItem(PUBLISHER_KEY);
-        } else {
-          selectedPublisher = key;
-          selectedGrade = null;
-          selectedLesson = null;
-          localStorage.setItem(PUBLISHER_KEY, key);
-          localStorage.removeItem(LESSON_KEY);
-        }
-        renderSettings();
-      });
-      wrap.appendChild(btn);
+      const opt = document.createElement('option');
+      opt.value = key;
+      opt.textContent = `📚 ${key} · ${pub.label}`;
+      if(key === selectedPublisher) opt.selected = true;
+      sel.appendChild(opt);
     });
   }
+  el('publisherTabs').addEventListener('change', (e)=>{
+    const key = e.target.value;
+    if(!key){
+      selectedPublisher = null;
+      selectedGrade = null;
+      localStorage.removeItem(PUBLISHER_KEY);
+    } else {
+      selectedPublisher = key;
+      selectedGrade = null;
+      selectedLesson = null;
+      localStorage.setItem(PUBLISHER_KEY, key);
+      localStorage.removeItem(LESSON_KEY);
+    }
+    renderSettings();
+  });
 
   function renderGradeTabs(){
     const wrap = el('gradeTabs');
