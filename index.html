@@ -47,7 +47,9 @@
 
   .app{width:100%;max-width:480px;}
   .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding:0 4px;}
-  .logo{display:flex;align-items:center;gap:9px;}
+  .logo{display:flex;align-items:center;gap:9px;background:none;border:none;padding:0;cursor:pointer;}
+  .logo:hover .logo-mark{border-color:var(--ember-gold);}
+  .logo:active{transform:scale(0.97);}
   .logo-mark{
     width:32px;height:32px;border-radius:8px;flex:0 0 auto;
     background:linear-gradient(180deg, var(--iron-light), var(--iron));
@@ -298,7 +300,7 @@
 
 <div class="app">
   <div class="topbar">
-    <div class="logo"><span class="logo-mark">🔨</span><span class="logo-text">단어<span>대장간</span></span></div>
+    <button class="logo" id="btnLogoRefresh" title="눌러서 새로고침"><span class="logo-mark">🔨</span><span class="logo-text">단어<span>대장간</span></span></button>
     <div style="display:flex;gap:8px;">
       <button class="icon-btn" id="btnShareApp" title="공유하기">🔗</button>
       <button class="icon-btn" id="btnLeaderboardTop" title="순위">🏆</button>
@@ -3121,6 +3123,11 @@
   el('btnHistoryTop').addEventListener('click', ()=>{ renderHistory(); el('modalHistory').classList.remove('hidden'); });
   el('closeHistory').addEventListener('click', ()=>el('modalHistory').classList.add('hidden'));
   el('btnLeaderboardStart').addEventListener('click', openLeaderboard);
+  el('btnLogoRefresh').addEventListener('click', ()=>{
+    showToast('새로고침 중…');
+    const url = location.origin + location.pathname + '?_r=' + Date.now();
+    setTimeout(()=>{ location.href = url; }, 150);
+  });
   el('btnShareApp').addEventListener('click', shareApp);
   el('btnTip').addEventListener('click', ()=>el('modalTip').classList.remove('hidden'));
   el('closeTip').addEventListener('click', ()=>el('modalTip').classList.add('hidden'));
