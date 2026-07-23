@@ -46,15 +46,28 @@
   button:focus-visible, a:focus-visible, input:focus-visible{outline:2px solid var(--ember-gold); outline-offset:2px;}
 
   .app{width:100%;max-width:480px;}
-  .topbar{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:14px;padding:0 4px;}
-  .logo{font-family:var(--font-display);font-size:30px;letter-spacing:1px;color:var(--ash);}
-  .logo span{color:var(--ember);}
+  .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding:0 4px;}
+  .logo{display:flex;align-items:center;gap:9px;}
+  .logo-mark{
+    width:32px;height:32px;border-radius:8px;flex:0 0 auto;
+    background:linear-gradient(180deg, var(--iron-light), var(--iron));
+    border:1px solid #554d43;box-shadow:0 2px 0 rgba(0,0,0,0.35);
+    display:flex;align-items:center;justify-content:center;font-size:16px;
+  }
+  .logo-text{font-family:var(--font-body);font-weight:800;font-size:21px;letter-spacing:-0.3px;color:var(--ash);}
+  .logo-text span{color:var(--ember);}
   .icon-btn{
     background:var(--bg-elevated);border:1px solid var(--iron);color:var(--ash);
     width:34px;height:34px;border-radius:var(--radius);
     display:flex;align-items:center;justify-content:center;font-size:16px;
   }
   .icon-btn:hover{border-color:var(--iron-light);}
+  .icon-btn.jp-logo-link{
+    font-family:var(--font-display);font-size:18px;font-weight:700;
+    color:var(--ash);text-decoration:none;border-color:var(--quench);
+  }
+  .icon-btn.jp-logo-link:hover{border-color:var(--quench-glow);color:var(--quench-glow);}
+  .jp-logo-inline{font-family:var(--font-display);font-weight:700;color:var(--ash);}
 
   .card{
     background:var(--bg-panel);border:1px solid var(--iron);
@@ -66,6 +79,24 @@
   .eyebrow{font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:var(--ash-dim);margin-bottom:6px;}
   .headline{font-family:var(--font-display);font-size:36px;line-height:1.05;letter-spacing:1px;margin:0 0 10px;}
   .sub{color:var(--ash-dim);font-size:14px;line-height:1.6;margin-bottom:20px;}
+  .tip-link{
+    display:flex;align-items:center;justify-content:center;gap:8px;
+    width:100%;max-width:480px;margin:0 auto 14px;
+    background:linear-gradient(180deg, rgba(242,169,59,0.10), rgba(232,84,59,0.06));
+    border:1px solid rgba(242,169,59,0.35);
+    color:var(--ash);border-radius:999px;
+    padding:10px 16px;font-size:12.5px;font-weight:600;text-align:center;
+    box-shadow:0 0 0 1px rgba(242,169,59,0.06) inset;
+    transition:border-color .15s ease, transform .08s ease, box-shadow .15s ease;
+  }
+  .tip-link:hover{
+    border-color:var(--ember-gold);
+    box-shadow:0 0 0 1px rgba(242,169,59,0.06) inset, 0 4px 16px -6px rgba(242,169,59,0.4);
+  }
+  .tip-link:active{transform:scale(0.98);}
+  .tip-link .tip-icon{font-size:15px;flex:0 0 auto;}
+  .tip-link .tip-divider{color:var(--ash-dim);}
+
   .visit-counter{
     font-size:12px;color:var(--ash-dim);background:var(--bg-elevated);
     border:1px solid var(--iron);border-radius:999px;padding:6px 12px;
@@ -232,19 +263,36 @@
   }
   .toast.show{opacity:1;}
   .hidden{display:none !important;}
+
+  .site-footer{
+    max-width:480px;margin:20px auto 0;padding:20px 16px 4px;
+    text-align:center;border-top:1px solid var(--iron);
+  }
+  .site-footer-title{
+    font-family:var(--font-display);font-size:18px;letter-spacing:0.5px;
+    color:var(--ash);margin-bottom:6px;
+  }
+  .site-footer-title span{color:var(--ash-dim);font-size:13px;font-family:var(--font-body);font-weight:400;margin-left:6px;}
+  .site-footer p{font-size:12.5px;color:var(--ash-dim);line-height:1.6;margin:6px 0;}
+  .site-footer-links a{color:var(--ember-gold);text-decoration:none;}
+  .site-footer-links a:hover{text-decoration:underline;}
+  .site-footer-links span{color:var(--iron-light);margin:0 6px;}
+  .site-footer-small{font-size:11px !important;color:var(--ash-dim);opacity:0.7;}
 </style>
 </head>
 <body>
 
 <div class="app">
   <div class="topbar">
-    <div class="logo">단어<span>대장간</span></div>
+    <div class="logo"><span class="logo-mark">🔨</span><span class="logo-text">단어<span>대장간</span></span></div>
     <div style="display:flex;gap:8px;">
       <button class="icon-btn" id="btnShareApp" title="공유하기">🔗</button>
       <button class="icon-btn" id="btnLeaderboardTop" title="순위">🏆</button>
       <button class="icon-btn" id="btnHistoryTop" title="기록">📖</button>
+      <a class="icon-btn jp-logo-link" href="https://benholdenpark.github.io/Japanesedio/" target="_blank" rel="noopener" title="활자소 — 일본어 공부 사이트로 이동">活</a>
     </div>
   </div>
+  <button class="tip-link" id="btnTip"><span class="tip-icon">⌨️</span> 키보드로 타이핑하면 더 편해요 <span class="tip-divider">·</span> 모바일 사용 시엔 TIP 확인</button>
 
   <div class="card">
     <!-- ============ START SCREEN ============ -->
@@ -351,6 +399,18 @@
       <button class="btn btn-ghost" id="btnBackHome">처음으로</button>
     </div>
   </div>
+
+  <div class="site-footer">
+    <div class="site-footer-title">단어 대장간 <span>Word Forge</span></div>
+    <p>흩어진 알파벳을 조립하며 영단어를 몸으로 익히는 학습용 게임입니다.</p>
+    <p class="site-footer-links">
+      <a href="https://benholdenpark.github.io/Japanesedio/" target="_blank" rel="noopener"><span class="jp-logo-inline">活</span> 일본어 공부 사이트</a>
+      <span>·</span>
+      <a href="https://github.com/benholdenpark" target="_blank" rel="noopener">GitHub</a>
+    </p>
+    <p class="site-footer-small">교육 목적으로 제작되었으며, 수업 및 개인 학습용으로 자유롭게 사용하실 수 있습니다.</p>
+    <p class="site-footer-small">Made with 🔥 by Ben</p>
+  </div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -376,6 +436,43 @@
     <div class="lesson-tabs" id="lbDiffTabs" style="margin-bottom:14px;"></div>
     <div id="lbNote" style="font-size:12px;color:var(--ash-dim);margin-bottom:10px;"></div>
     <div id="leaderboardList"></div>
+  </div>
+</div>
+
+<!-- ============ TIP MODAL ============ -->
+<div class="modal-backdrop hidden" id="modalTip">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">💡 모바일 사용 TIP</div>
+      <button class="icon-btn" id="closeTip">✕</button>
+    </div>
+    <p style="font-size:13px;color:var(--ash-dim);line-height:1.6;margin-bottom:16px;">
+      매번 주소를 입력하거나 링크를 찾는 대신, <b style="color:var(--ash);">휴대폰 바탕화면에 아이콘을 만들어두면</b>
+      앱처럼 한 번 터치로 바로 실행할 수 있어서 훨씬 편해요.
+    </p>
+
+    <div style="margin-bottom:18px;">
+      <div class="section-label">🤖 안드로이드 (크롬 브라우저)</div>
+      <ol style="margin:0;padding-left:20px;font-size:13.5px;color:var(--ash);line-height:1.8;">
+        <li>크롬 브라우저로 이 페이지를 엽니다</li>
+        <li>오른쪽 위 <b>점 세 개(⋮) 메뉴</b>를 누릅니다</li>
+        <li><b>"홈 화면에 추가"</b>를 선택합니다</li>
+        <li>이름을 확인하고 <b>"추가"</b>를 누릅니다</li>
+      </ol>
+    </div>
+
+    <div>
+      <div class="section-label">🍎 아이폰 (사파리 또는 크롬)</div>
+      <ol style="margin:0;padding-left:20px;font-size:13.5px;color:var(--ash);line-height:1.8;">
+        <li><b>사파리(Safari)</b> 또는 <b>크롬(Chrome)</b> 중 쓰시는 브라우저로 이 페이지를 엽니다</li>
+        <li>화면 아래(또는 위쪽) <b>공유 버튼</b>(네모 안에 위쪽 화살표 ⬆️)을 누릅니다</li>
+        <li>아래로 스크롤해서 <b>"홈 화면에 추가"</b>를 찾아 누릅니다</li>
+        <li>이름을 확인하고 오른쪽 위 <b>"추가"</b>를 누릅니다</li>
+      </ol>
+      <p style="font-size:12px;color:var(--ash-dim);margin-top:8px;">
+        (참고: 크롬은 비교적 최신 버전에서만 이 기능이 지원돼요. 혹시 "홈 화면에 추가" 메뉴가 안 보이면 사파리로 시도해보세요.)
+      </p>
+    </div>
   </div>
 </div>
 
@@ -2918,7 +3015,7 @@
     const filtered = all
       .filter(r=>r.difficulty === lbSelectedDiff)
       .sort((a,b)=> b.score - a.score || (a.elapsedMs ?? Infinity) - (b.elapsedMs ?? Infinity) || new Date(b.date) - new Date(a.date))
-      .slice(0, 10);
+      .slice(0, 20);
     list.innerHTML = '';
     if(filtered.length === 0){
       list.innerHTML = '<div class="history-row"><span class="history-date">아직 기록이 없어요</span></div>';
@@ -3010,6 +3107,8 @@
   el('closeHistory').addEventListener('click', ()=>el('modalHistory').classList.add('hidden'));
   el('btnLeaderboardStart').addEventListener('click', openLeaderboard);
   el('btnShareApp').addEventListener('click', shareApp);
+  el('btnTip').addEventListener('click', ()=>el('modalTip').classList.remove('hidden'));
+  el('closeTip').addEventListener('click', ()=>el('modalTip').classList.add('hidden'));
   el('btnLeaderboardTop').addEventListener('click', openLeaderboard);
   el('closeLeaderboard').addEventListener('click', ()=>el('modalLeaderboard').classList.add('hidden'));
   el('btnSubmitScore').addEventListener('click', submitScoreToLeaderboard);
