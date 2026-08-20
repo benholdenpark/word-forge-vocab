@@ -511,7 +511,7 @@
   ====================================================================== */
   const PUBLISHERS = {
     "VS": {
-      label: "Visang",
+      label: "비상",
       accent: "quench",
       gradeOrder: ["1학년", "2학년", "3학년(2015)"],
       grades: {
@@ -1859,7 +1859,7 @@
       }
     },
     "DD(L)": {
-      label: "Doosan Donga Lee",
+      label: "동아(이)",
       accent: "plum",
       gradeOrder: ["2학년", "3학년(2015)"],
       grades: {
@@ -2548,7 +2548,7 @@
       }
     },
     "DD(Y)": {
-      label: "Doosan Donga Yoon",
+      label: "동아(윤)",
       accent: "teal",
       gradeOrder: ["1학년", "2학년"],
       grades: {
@@ -3390,10 +3390,9 @@
   };
   const PUBLISHER_ORDER = ["VS", "DD(L)", "DD(Y)"];
   const DIFFICULTIES = [
-    { key:"free", label:"자유" },
-    { key:"beginner", label:"초보자" },
-    { key:"expert", label:"전문가" },
-    { key:"god", label:"신" }
+    { key:"beginner", label:"초보자", sub:"(우리말 뜻)" },
+    { key:"expert", label:"전문가", sub:"(영영풀이)" },
+    { key:"god", label:"신", sub:"(의미 제공 없음)" }
   ];
   const FIXED_COUNTS = { expert:30, god:20 };
   const FREE_DISPLAY_OPTIONS = [
@@ -3493,8 +3492,7 @@
     }
   }
 
-  let selectedDifficulty = localStorage.getItem(DIFF_KEY) || 'beginner';
-  if(!DIFFICULTIES.some(d=>d.key === selectedDifficulty)) selectedDifficulty = 'beginner';
+  let selectedDifficulty = 'beginner';
   let wordCount = parseInt(localStorage.getItem(COUNT_KEY), 10) || 18;
 
   function currentLessonWords(){
@@ -3508,7 +3506,7 @@
       const pub = PUBLISHERS[key];
       const opt = document.createElement('option');
       opt.value = key;
-      opt.textContent = `📚 ${key} · ${pub.label}`;
+      opt.textContent = `📚 ${pub.label}`;
       if(key === selectedPublisher) opt.selected = true;
       sel.appendChild(opt);
     });
@@ -3550,8 +3548,7 @@
   let selectedFreeDisplay = localStorage.getItem(FREE_DISPLAY_KEY) || 'meaning';
   if(!FREE_DISPLAY_OPTIONS.some(o=>o.key === selectedFreeDisplay)) selectedFreeDisplay = 'meaning';
 
-  let selectedCase = localStorage.getItem(CASE_KEY) || 'upper';
-  if(!CASE_OPTIONS.some(o=>o.key === selectedCase)) selectedCase = 'upper';
+  let selectedCase = 'lower';
 
   function applyCase(str){
     return selectedCase === 'lower' ? str.toLowerCase() : str.toUpperCase();
@@ -3580,7 +3577,7 @@
     DIFFICULTIES.forEach(d=>{
       const btn = document.createElement('button');
       btn.className = 'lesson-tab' + (d.key === selectedDifficulty ? ' active' : '');
-      btn.innerHTML = `<span class="name">${d.key === selectedDifficulty ? '✓ ' : ''}${d.label}</span>`;
+      btn.innerHTML = `<span class="name">${d.key === selectedDifficulty ? '✓ ' : ''}${d.label}</span><span class="count">${d.sub || ''}</span>`;
       btn.addEventListener('click', ()=>{
         selectedDifficulty = d.key;
         localStorage.setItem(DIFF_KEY, d.key);
