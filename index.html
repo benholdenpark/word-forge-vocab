@@ -201,6 +201,28 @@
   .heat-fill.low{background:linear-gradient(90deg, var(--danger), var(--ember));}
 
   .tiles{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:20px;min-height:56px;}
+
+  .quiz-prompt{
+    text-align:center;font-family:var(--font-mono);font-weight:700;font-size:24px;
+    letter-spacing:0.3px;color:var(--ash);background:var(--bg-elevated);
+    border:1px solid var(--iron);border-radius:var(--radius);
+    padding:22px 16px;margin-bottom:16px;line-height:1.3;
+  }
+  .quiz-options{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
+  .quiz-option{
+    background:var(--bg-elevated);border:1.5px solid var(--iron);
+    color:var(--ash);border-radius:var(--radius);padding:14px 10px;
+    font-size:14px;font-weight:600;text-align:center;min-height:52px;
+    display:flex;align-items:center;justify-content:center;
+    transition:border-color .12s ease, transform .08s ease;
+  }
+  .quiz-option:not(:disabled):hover{border-color:var(--ember-gold);}
+  .quiz-option:active{transform:scale(0.98);}
+  .quiz-option.correct{border-color:var(--quench);background:linear-gradient(180deg, var(--quench-glow), var(--quench));color:#0e2330;animation:quench .5s ease;}
+  .quiz-option.wrong{border-color:var(--danger);background:rgba(196,59,46,0.18);animation:shake .4s ease;}
+  .quiz-option.removed{opacity:0.25;}
+  .quiz-option:disabled{cursor:not-allowed;}
+
   .tile{
     width:44px;height:48px;border-radius:6px;
     background:linear-gradient(180deg, var(--iron-light), var(--iron));
@@ -314,8 +336,8 @@
     <!-- ============ START SCREEN ============ -->
     <div id="screen-start">
       <div class="eyebrow">VOCAB PRACTICE</div>
-      <h1 class="headline">흩어진 글자로<br>영단어를 완성하세요.</h1>
-      <p class="sub">레슨을 고르면 그 레슨 단어 중에서 무작위로 나옵니다. 타이머가 흐르는 동안 뒤섞인 알파벳으로 단어를 조립하세요.</p>
+      <h1 class="headline" id="mainHeadline">흩어진 글자로<br>영단어를 완성하세요.</h1>
+      <p class="sub" id="mainSub">레슨을 고르면 그 레슨 단어 중에서 무작위로 나옵니다. 타이머가 흐르는 동안 뒤섞인 알파벳으로 단어를 조립하세요.</p>
       <div class="visit-counter" id="visitCounter"></div>
 
       <div class="settings-section">
@@ -328,7 +350,12 @@
       </div>
 
       <div class="settings-section">
-        <div class="section-label">난이도</div>
+        <div class="section-label">게임 방식</div>
+        <div class="lesson-tabs" id="modeTabs" style="margin-bottom:0;"></div>
+      </div>
+
+      <div class="settings-section">
+        <div class="section-label" id="diffSectionLabel">난이도</div>
         <div class="lesson-tabs" id="diffTabs"></div>
 
         <div class="setting-row hidden" id="freeControls" style="flex-direction:column;align-items:stretch;gap:12px;">
@@ -387,6 +414,35 @@
           <button class="btn btn-primary" id="btnResume" style="width:180px;">계속하기</button>
           <button class="btn btn-secondary" id="btnRestart" style="width:180px;">다시 시작</button>
           <button class="btn btn-ghost" id="btnQuitHome" style="width:180px;">처음으로</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ QUIZ SCREEN ============ -->
+    <div id="screen-quiz" class="hidden">
+      <div class="game-wrap">
+        <div class="game-meta">
+          <span class="word-count" id="quizCount">1 / 18</span>
+          <span class="score-live" id="quizElapsed">⏱ 0:00</span>
+          <span class="score-live" id="quizScore">0 pts</span>
+        </div>
+        <div class="heat-track"><div class="heat-fill" id="quizHeatFill" style="width:100%"></div></div>
+
+        <div class="quiz-prompt" id="quizPrompt"></div>
+        <div class="quiz-options" id="quizOptions"></div>
+        <div class="meaning-flash" id="quizFeedback"></div>
+
+        <div class="assist-row">
+          <button class="assist-btn" id="btnQuizFifty">➗ 오답 제거<small id="quizFiftyCount">3회 남음</small></button>
+          <button class="assist-btn" id="btnQuizGiveUp">🏳️ 포기(정답 보기)</button>
+        </div>
+        <button class="btn btn-ghost" id="btnQuizPause">일시정지</button>
+
+        <div class="pause-overlay hidden" id="quizPauseOverlay">
+          <div class="headline">일시정지</div>
+          <button class="btn btn-primary" id="btnQuizResume" style="width:180px;">계속하기</button>
+          <button class="btn btn-secondary" id="btnQuizRestart" style="width:180px;">다시 시작</button>
+          <button class="btn btn-ghost" id="btnQuizQuitHome" style="width:180px;">처음으로</button>
         </div>
       </div>
     </div>
@@ -3394,6 +3450,12 @@
     { key:"expert", label:"전문가", sub:"(영영풀이)" },
     { key:"god", label:"신", sub:"(의미 제공 없음)" }
   ];
+  const QUIZ_TYPES = [
+    { key:"q_meaning", label:"뜻 찾기", sub:"(단어를 보고 뜻 고르기)" },
+    { key:"q_word", label:"단어 찾기", sub:"(뜻을 보고 단어 고르기)" },
+    { key:"q_defword", label:"단어 찾기(영영풀이)", sub:"(영영풀이를 보고 단어 고르기)" },
+    { key:"q_def", label:"영영풀이 찾기", sub:"(단어를 보고 영영풀이 고르기)" }
+  ];
   const FIXED_COUNTS = { expert:30, god:20 };
   const FREE_DISPLAY_OPTIONS = [
     { key:"meaning", label:"단어 뜻" },
@@ -3493,7 +3555,41 @@
   }
 
   let selectedDifficulty = 'beginner';
+  let selectedQuizType = 'q_meaning';
   let wordCount = parseInt(localStorage.getItem(COUNT_KEY), 10) || 18;
+  let gameMode = 'tiles';
+  const GAME_MODES = [
+    {
+      key:'tiles', label:'🔤 글자 조합',
+      headline: '흩어진 글자로<br>영단어를 완성하세요.',
+      sub: '레슨을 고르면 그 레슨 단어 중에서 무작위로 나옵니다. 타이머가 흐르는 동안 뒤섞인 알파벳으로 단어를 조립하세요.'
+    },
+    {
+      key:'quiz', label:'📝 객관식 퀴즈',
+      headline: '보기 중에서<br>정답을 골라보세요.',
+      sub: '레슨을 고르면 그 레슨 단어 중에서 무작위로 출제됩니다. 문제 유형에 따라 단어·뜻·영영풀이 중 하나가 문제로, 나머지가 보기로 나와요.'
+    }
+  ];
+
+  function renderModeTabs(){
+    const wrap = el('modeTabs');
+    wrap.innerHTML = '';
+    const active = GAME_MODES.find(o=>o.key === gameMode) || GAME_MODES[0];
+    el('mainHeadline').innerHTML = active.headline;
+    el('mainSub').textContent = active.sub;
+    GAME_MODES.forEach(o=>{
+      const btn = document.createElement('button');
+      btn.className = 'lesson-tab' + (o.key === gameMode ? ' active' : '');
+      btn.innerHTML = `<span class="name">${o.key === gameMode ? '✓ ' : ''}${o.label}</span>`;
+      btn.addEventListener('click', ()=>{
+        gameMode = o.key;
+        el('diffSectionLabel').textContent = gameMode === 'quiz' ? '문제 유형' : '난이도';
+        renderModeTabs();
+        renderSettings();
+      });
+      wrap.appendChild(btn);
+    });
+  }
 
   function currentLessonWords(){
     return currentLessonsMap()[selectedLesson] || [];
@@ -3574,13 +3670,20 @@
   function renderDiffTabs(){
     const wrap = el('diffTabs');
     wrap.innerHTML = '';
-    DIFFICULTIES.forEach(d=>{
+    const isQuiz = gameMode === 'quiz';
+    const list = isQuiz ? QUIZ_TYPES : DIFFICULTIES;
+    const current = isQuiz ? selectedQuizType : selectedDifficulty;
+    list.forEach(d=>{
       const btn = document.createElement('button');
-      btn.className = 'lesson-tab' + (d.key === selectedDifficulty ? ' active' : '');
-      btn.innerHTML = `<span class="name">${d.key === selectedDifficulty ? '✓ ' : ''}${d.label}</span><span class="count">${d.sub || ''}</span>`;
+      btn.className = 'lesson-tab' + (d.key === current ? ' active' : '');
+      btn.innerHTML = `<span class="name">${d.key === current ? '✓ ' : ''}${d.label}</span><span class="count">${d.sub || ''}</span>`;
       btn.addEventListener('click', ()=>{
-        selectedDifficulty = d.key;
-        localStorage.setItem(DIFF_KEY, d.key);
+        if(isQuiz){
+          selectedQuizType = d.key;
+        } else {
+          selectedDifficulty = d.key;
+          localStorage.setItem(DIFF_KEY, d.key);
+        }
         renderSettings();
       });
       wrap.appendChild(btn);
@@ -3650,8 +3753,8 @@
 
     const noGrade = !selectedGrade;
     el('lessonTabs').classList.toggle('hidden', noGrade);
-    el('freeControls').classList.toggle('hidden', noGrade || selectedDifficulty !== 'free');
-    el('fixedInfo').classList.toggle('hidden', noGrade || selectedDifficulty === 'free');
+    el('freeControls').classList.add('hidden');
+    el('fixedInfo').classList.toggle('hidden', noGrade || gameMode === 'quiz');
 
     if(noGrade){
       el('btnPlay').disabled = true;
@@ -3661,17 +3764,8 @@
 
     renderLessonTabs();
     const total = currentLessonWords().length;
-    const isFree = selectedDifficulty === 'free';
 
-    if(isFree){
-      const minC = Math.min(5, Math.max(1, total));
-      wordCount = total > 0 ? Math.max(minC, Math.min(total, wordCount)) : 0;
-      localStorage.setItem(COUNT_KEY, wordCount);
-      el('bankSize').textContent = total;
-      el('wordCountVal').textContent = wordCount;
-      el('stepDown').disabled = total === 0;
-      el('stepUp').disabled = total === 0;
-    } else {
+    if(gameMode !== 'quiz'){
       const fixed = selectedDifficulty === 'beginner' ? total : Math.min(FIXED_COUNTS[selectedDifficulty] || 0, total);
       const fixedText = selectedDifficulty === 'beginner' ? `전체 ${fixed}개` : `${fixed}개`;
       el('fixedInfoLabel').textContent = `고정 단어 수: ${fixedText} (이 레슨 보유 ${total}개)`;
@@ -3703,9 +3797,11 @@
   let state = null;
   const screenStart = el('screen-start');
   const screenGame = el('screen-game');
+  const screenQuiz = el('screen-quiz');
   const screenEnd = el('screen-end');
 
   function startGame(mode){
+    if(gameMode === 'quiz'){ startQuizGame(mode); return; }
     const pool = currentLessonWords();
     if(pool.length === 0){
       showToast(`Lesson ${selectedLesson}에는 아직 단어가 없어요`);
@@ -3782,6 +3878,8 @@
     if(document.visibilityState === 'visible'){
       tickTimer();
       tickStopwatch();
+      tickQuizTimer();
+      tickQuizStopwatch();
     }
   });
 
@@ -3790,6 +3888,281 @@
     const fill = el('heatFill');
     fill.style.width = pct + '%';
     fill.classList.toggle('low', state.timeLeft <= 15);
+  }
+
+  /* =======================================================================
+     QUIZ MODE — multiple-choice recognition game, reusing the same
+     lesson/difficulty/leaderboard/history infrastructure as the tile game.
+  ======================================================================= */
+  function buildQuizQuestions(pool, count, quizType){
+    const roundEntries = shuffle(pool).slice(0, count || pool.length);
+    return roundEntries.map(entry=>{
+      let prompt, correctText, distractorPool;
+      if(quizType === 'q_word'){
+        prompt = entry.meaning;
+        correctText = entry.word;
+        distractorPool = pool.filter(e=>e.word !== entry.word).map(e=>e.word);
+      } else if(quizType === 'q_defword'){
+        prompt = entry.def;
+        correctText = entry.word;
+        distractorPool = pool.filter(e=>e.word !== entry.word).map(e=>e.word);
+      } else if(quizType === 'q_def'){
+        prompt = entry.word;
+        correctText = entry.def;
+        distractorPool = pool.filter(e=>e.def !== entry.def).map(e=>e.def);
+      } else {
+        prompt = entry.word;
+        correctText = entry.meaning;
+        distractorPool = pool.filter(e=>e.meaning !== entry.meaning).map(e=>e.meaning);
+      }
+      const distractors = shuffle([...new Set(distractorPool)]).slice(0,3);
+      const choices = shuffle([
+        { text: correctText, correct: true },
+        ...distractors.map(text=>({ text, correct:false }))
+      ]);
+      return { entry, prompt, choices, answered:false, usedAssist:false };
+    });
+  }
+
+  function startQuizGame(mode){
+    const pool = currentLessonWords();
+    if(pool.length === 0){
+      showToast(`Lesson ${selectedLesson}에는 아직 단어가 없어요`);
+      return;
+    }
+    if(pool.length < 4){
+      showToast('퀴즈를 만들려면 이 레슨에 단어가 4개 이상 있어야 해요');
+      return;
+    }
+    const count = Math.min(18, pool.length);
+    const questions = buildQuizQuestions(pool, count, selectedQuizType);
+    state = {
+      gameMode: 'quiz',
+      mode,
+      lesson: selectedLesson,
+      difficulty: selectedQuizType,
+      questions,
+      words: questions.map(q=>q.entry),
+      qIdx: 0,
+      score: 0,
+      solvedCount: 0,
+      timeLeft: GAME_TIME,
+      timerId: null,
+      stopwatchId: null,
+      fiftyLeft: 3,
+      resultsGrid: [],
+      missed: [],
+      paused: false,
+      startedAt: Date.now(),
+      totalPausedMs: 0,
+      pausedAt: null,
+      elapsedMs: 0,
+      endsAt: null
+    };
+    screenStart.classList.add('hidden');
+    screenEnd.classList.add('hidden');
+    screenQuiz.classList.remove('hidden');
+    el('quizPauseOverlay').classList.add('hidden');
+    setupQuizQuestion(0);
+    startQuizStopwatch();
+    if(mode !== 'relax'){
+      startQuizTimer();
+    } else {
+      el('quizHeatFill').style.width = '100%';
+    }
+  }
+
+  function startQuizStopwatch(){
+    if(state.stopwatchId) clearInterval(state.stopwatchId);
+    state.stopwatchId = setInterval(tickQuizStopwatch, 250);
+    tickQuizStopwatch();
+  }
+  function tickQuizStopwatch(){
+    if(!state || state.gameMode !== 'quiz' || state.paused) return;
+    const elapsed = Math.max(0, Date.now() - state.startedAt - state.totalPausedMs);
+    el('quizElapsed').textContent = `⏱ ${formatElapsed(elapsed)}`;
+  }
+  function startQuizTimer(){
+    if(state.timerId) clearInterval(state.timerId);
+    state.endsAt = Date.now() + state.timeLeft * 1000;
+    state.timerId = setInterval(tickQuizTimer, 200);
+  }
+  function tickQuizTimer(){
+    if(!state || state.gameMode !== 'quiz' || state.paused) return;
+    const remainingMs = state.endsAt - Date.now();
+    state.timeLeft = Math.max(0, Math.ceil(remainingMs / 1000));
+    renderQuizHeat();
+    if(remainingMs <= 0){
+      state.timeLeft = 0;
+      renderQuizHeat();
+      endGame(false);
+    }
+  }
+  function renderQuizHeat(){
+    const pct = Math.max(0, Math.min(100, (state.timeLeft / GAME_TIME) * 100));
+    const fill = el('quizHeatFill');
+    fill.style.width = pct + '%';
+    fill.classList.toggle('low', state.timeLeft <= 15);
+  }
+
+  function setupQuizQuestion(idx){
+    state.qIdx = idx;
+    const q = state.questions[idx];
+    el('quizCount').textContent = state.mode === 'relax'
+      ? `${idx+1} / ${state.questions.length} · 여유 모드`
+      : `${idx+1} / ${state.questions.length}`;
+    el('quizScore').textContent = `${state.score} pts`;
+    el('quizFeedback').textContent = '';
+    const promptIsWord = (state.difficulty === 'q_meaning' || state.difficulty === 'q_def');
+    el('quizPrompt').textContent = promptIsWord ? applyCase(q.prompt) : q.prompt;
+    renderQuizOptions();
+    updateQuizAssistButtons();
+  }
+
+  function renderQuizOptions(){
+    const wrap = el('quizOptions');
+    wrap.innerHTML = '';
+    const q = state.questions[state.qIdx];
+    const isWordChoice = (state.difficulty === 'q_word' || state.difficulty === 'q_defword');
+    q.choices.forEach((c, i)=>{
+      const btn = document.createElement('button');
+      btn.className = 'quiz-option' + (c.removed ? ' removed' : '');
+      btn.textContent = isWordChoice ? applyCase(c.text) : c.text;
+      btn.disabled = !!c.removed || q.answered;
+      btn.addEventListener('click', ()=>selectQuizAnswer(i));
+      wrap.appendChild(btn);
+    });
+  }
+
+  function updateQuizAssistButtons(){
+    const q = state.questions[state.qIdx];
+    el('quizFiftyCount').textContent = `${state.fiftyLeft}회 남음`;
+    el('btnQuizFifty').disabled = state.fiftyLeft <= 0 || q.answered;
+    el('btnQuizGiveUp').disabled = q.answered;
+  }
+
+  function lockQuizOptions(){
+    el('quizOptions').querySelectorAll('.quiz-option').forEach(b=>{ b.disabled = true; });
+  }
+
+  function selectQuizAnswer(i){
+    const q = state.questions[state.qIdx];
+    if(q.answered) return;
+    q.answered = true;
+    const chosen = q.choices[i];
+    const buttons = el('quizOptions').querySelectorAll('.quiz-option');
+    buttons.forEach((b, bi)=>{
+      if(q.choices[bi].correct) b.classList.add('correct');
+      else if(bi === i) b.classList.add('wrong');
+    });
+    lockQuizOptions();
+    updateQuizAssistButtons();
+
+    const posTag = q.entry.pos ? ` (${q.entry.pos})` : '';
+    el('quizFeedback').textContent = `${q.entry.word} — ${q.entry.meaning}${posTag}`;
+
+    if(chosen.correct){
+      playCorrectSound();
+      const status = q.usedAssist ? 'assisted' : 'clean';
+      state.resultsGrid.push(status);
+      if(status === 'assisted') state.missed.push(q.entry);
+      const base = Math.max(10, 100 - (q.usedAssist ? 15 : 0));
+      state.score += base;
+      state.solvedCount += 1;
+      if(state.mode !== 'relax'){
+        state.endsAt += TIME_BONUS * 1000;
+        state.timeLeft = Math.max(0, Math.ceil((state.endsAt - Date.now()) / 1000));
+        renderQuizHeat();
+      }
+    } else {
+      playWrongSound();
+      state.resultsGrid.push('gaveup');
+      state.missed.push(q.entry);
+      if(state.mode !== 'relax'){
+        state.endsAt -= WRONG_PENALTY * 1000;
+        state.timeLeft = Math.max(0, Math.ceil((state.endsAt - Date.now()) / 1000));
+        renderQuizHeat();
+      }
+    }
+    el('quizScore').textContent = `${state.score} pts`;
+
+    setTimeout(()=>{
+      if(state.mode !== 'relax' && state.timeLeft <= 0){ endGame(false); return; }
+      if(state.qIdx + 1 >= state.questions.length){
+        endGame(true);
+      } else {
+        setupQuizQuestion(state.qIdx + 1);
+      }
+    }, 1200);
+  }
+
+  function useQuizFifty(){
+    const q = state.questions[state.qIdx];
+    if(state.fiftyLeft <= 0 || q.answered) return;
+    const wrongIdxs = q.choices
+      .map((c,i)=>({c,i}))
+      .filter(o=>!o.c.correct && !o.c.removed)
+      .map(o=>o.i);
+    shuffle(wrongIdxs).slice(0,2).forEach(i=>{ q.choices[i].removed = true; });
+    q.usedAssist = true;
+    state.fiftyLeft -= 1;
+    renderQuizOptions();
+    updateQuizAssistButtons();
+  }
+
+  function giveUpQuiz(){
+    const q = state.questions[state.qIdx];
+    if(q.answered) return;
+    q.answered = true;
+    const buttons = el('quizOptions').querySelectorAll('.quiz-option');
+    buttons.forEach((b, bi)=>{ if(q.choices[bi].correct) b.classList.add('correct'); });
+    lockQuizOptions();
+    updateQuizAssistButtons();
+    playWrongSound();
+    state.resultsGrid.push('gaveup');
+    state.missed.push(q.entry);
+    const posTag = q.entry.pos ? ` (${q.entry.pos})` : '';
+    el('quizFeedback').textContent = `${q.entry.word} — ${q.entry.meaning}${posTag}`;
+    setTimeout(()=>{
+      if(state.qIdx + 1 >= state.questions.length){
+        endGame(true);
+      } else {
+        setupQuizQuestion(state.qIdx + 1);
+      }
+    }, 1500);
+  }
+
+  function pauseQuizGame(){
+    if(!state) return;
+    state.paused = true;
+    state.pausedAt = Date.now();
+    el('quizPauseOverlay').classList.remove('hidden');
+  }
+  function resumeQuizGame(){
+    if(state.pausedAt){
+      const pausedDuration = Date.now() - state.pausedAt;
+      state.totalPausedMs += pausedDuration;
+      if(state.mode !== 'relax' && state.endsAt){
+        state.endsAt += pausedDuration;
+      }
+    }
+    state.pausedAt = null;
+    state.paused = false;
+    el('quizPauseOverlay').classList.add('hidden');
+  }
+  function restartQuizGame(){
+    const mode = state.mode;
+    resumeQuizGame();
+    startQuizGame(mode);
+  }
+  function quitQuizToHome(){
+    if(state && state.timerId) clearInterval(state.timerId);
+    if(state && state.stopwatchId) clearInterval(state.stopwatchId);
+    state = null;
+    el('quizPauseOverlay').classList.add('hidden');
+    screenQuiz.classList.add('hidden');
+    screenStart.classList.remove('hidden');
+    renderSettings();
   }
 
   function setupWord(idx){
@@ -4067,9 +4440,11 @@
     }
 
     screenGame.classList.add('hidden');
+    screenQuiz.classList.add('hidden');
     screenEnd.classList.remove('hidden');
     el('resultTitle').textContent = completedAll ? '완성!' : '시간 종료';
-    const diffLabel = (DIFFICULTIES.find(d=>d.key===state.difficulty) || {}).label || state.difficulty;
+    const diffEntry = (state.gameMode === 'quiz' ? QUIZ_TYPES : DIFFICULTIES).find(d=>d.key===state.difficulty) || {};
+    const diffLabel = diffEntry.label || state.difficulty;
     el('resultSub').textContent = `Lesson ${state.lesson} · ${diffLabel} · ${state.solvedCount} / ${state.words.length}개 단어 완성`;
     el('resultScore').textContent = `${state.score} pts`;
     el('resultTime').textContent = `완료 시간: ${formatElapsed(state.elapsedMs)}`;
@@ -4223,11 +4598,11 @@
     return true;
   }
 
-  let lbSelectedDiff = 'free';
+  let lbSelectedDiff = 'beginner';
   function renderLbTabs(){
     const wrap = el('lbDiffTabs');
     wrap.innerHTML = '';
-    DIFFICULTIES.forEach(d=>{
+    [...DIFFICULTIES, ...QUIZ_TYPES].forEach(d=>{
       const btn = document.createElement('button');
       btn.className = 'lesson-tab' + (d.key === lbSelectedDiff ? ' active' : '');
       btn.innerHTML = `<span class="name">${d.key === lbSelectedDiff ? '✓ ' : ''}${d.label}</span>`;
@@ -4359,6 +4734,13 @@
   el('btnRestart').addEventListener('click', restartGame);
   el('btnQuitHome').addEventListener('click', quitToHome);
 
+  el('btnQuizFifty').addEventListener('click', useQuizFifty);
+  el('btnQuizGiveUp').addEventListener('click', giveUpQuiz);
+  el('btnQuizPause').addEventListener('click', pauseQuizGame);
+  el('btnQuizResume').addEventListener('click', resumeQuizGame);
+  el('btnQuizRestart').addEventListener('click', restartQuizGame);
+  el('btnQuizQuitHome').addEventListener('click', quitQuizToHome);
+
   el('btnShare').addEventListener('click', shareScore);
   el('btnPracticeAgain').addEventListener('click', ()=>startGame('practice'));
   el('btnBackHome').addEventListener('click', ()=>{
@@ -4381,6 +4763,7 @@
     }
   });
 
+  renderModeTabs();
   renderSettings();
   trackAndRenderVisits();
 })();
