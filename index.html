@@ -4623,7 +4623,14 @@
     const all = await fetchAllRecords();
     const filtered = all
       .filter(r=>r.difficulty === lbSelectedDiff)
-      .sort((a,b)=> b.score - a.score || (a.elapsedMs ?? Infinity) - (b.elapsedMs ?? Infinity) || new Date(b.date) - new Date(a.date))
+      .map(r=>{
+        const total = r.total || 1;
+        const accuracy = (r.solved || 0) / total;
+        const emsNum = Number(r.elapsedMs);
+        const avgMsPerWord = (Number.isFinite(emsNum) && emsNum > 0) ? emsNum / total : Infinity;
+        return { ...r, accuracy, avgMsPerWord };
+      })
+      .sort((a,b)=> b.accuracy - a.accuracy || a.avgMsPerWord - b.avgMsPerWord || new Date(b.date) - new Date(a.date))
       .slice(0, 20);
     list.innerHTML = '';
     if(filtered.length === 0){
@@ -4635,7 +4642,9 @@
       row.className = 'history-row';
       const d = r.date ? new Date(r.date) : null;
       const dateStr = d ? `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}` : '';
-      row.innerHTML = `<span class="history-date">${i+1}위 · ${r.name || '익명'} · Lesson ${r.lesson}${dateStr ? ' · ' + dateStr : ''}</span><span class="history-stat">${r.solved}/${r.total} · ${r.score}pts${r.elapsedMs != null ? ' · ' + formatElapsed(r.elapsedMs) : ''}</span>`;
+      const pct = Math.round(r.accuracy * 100);
+      const avgSec = isFinite(r.avgMsPerWord) ? (r.avgMsPerWord/1000).toFixed(1) : '—';
+      row.innerHTML = `<span class="history-date">${i+1}위 · ${r.name || '익명'} · Lesson ${r.lesson}${dateStr ? ' · ' + dateStr : ''}</span><span class="history-stat">${pct}% (${r.solved}/${r.total}) · 단어당 ${avgSec}초 · ${r.score}pts</span>`;
       list.appendChild(row);
     });
   }
