@@ -3456,7 +3456,6 @@
     { key:"q_defword", label:"단어 찾기(영영풀이)", sub:"(영영풀이를 보고 단어 고르기)" },
     { key:"q_def", label:"영영풀이 찾기", sub:"(단어를 보고 영영풀이 고르기)" }
   ];
-  const FIXED_COUNTS = { expert:30, god:20 };
   const FREE_DISPLAY_OPTIONS = [
     { key:"meaning", label:"단어 뜻" },
     { key:"definition", label:"영영 풀이" }
@@ -3726,11 +3725,7 @@
   }
 
   function effectiveRoundCount(total){
-    if(selectedDifficulty === 'free'){
-      const minC = Math.min(5, Math.max(1, total));
-      return total > 0 ? Math.max(minC, Math.min(total, wordCount)) : 0;
-    }
-    return Math.min(FIXED_COUNTS[selectedDifficulty] || total, total);
+    return total;
   }
 
   function renderSettings(){
@@ -3766,9 +3761,7 @@
     const total = currentLessonWords().length;
 
     if(gameMode !== 'quiz'){
-      const fixed = selectedDifficulty === 'beginner' ? total : Math.min(FIXED_COUNTS[selectedDifficulty] || 0, total);
-      const fixedText = selectedDifficulty === 'beginner' ? `전체 ${fixed}개` : `${fixed}개`;
-      el('fixedInfoLabel').textContent = `고정 단어 수: ${fixedText} (이 레슨 보유 ${total}개)`;
+      el('fixedInfoLabel').textContent = `이 레슨의 전체 단어(${total}개)를 모두 학습합니다`;
     }
 
     const empty = total === 0;
@@ -3934,7 +3927,7 @@
       showToast('퀴즈를 만들려면 이 레슨에 단어가 4개 이상 있어야 해요');
       return;
     }
-    const count = Math.min(18, pool.length);
+    const count = pool.length;
     const questions = buildQuizQuestions(pool, count, selectedQuizType);
     state = {
       gameMode: 'quiz',
