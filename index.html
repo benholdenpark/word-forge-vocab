@@ -4569,7 +4569,7 @@
   async function fetchAllRecords(){
     if(LEADERBOARD_ENDPOINT){
       try{
-        const res = await fetch(LEADERBOARD_ENDPOINT);
+        const res = await fetch(`${LEADERBOARD_ENDPOINT}?_=${Date.now()}`, { cache: 'no-store' });
         const data = await res.json();
         return Array.isArray(data) ? data : [];
       }catch(e){
@@ -4677,7 +4677,7 @@
         await fetch(LEADERBOARD_ENDPOINT, { method:'POST', body: JSON.stringify({ type:'visit', date:new Date().toISOString() }) });
       }catch(e){ /* counter fetch below will still show existing totals */ }
       try{
-        const res = await fetch(`${LEADERBOARD_ENDPOINT}?type=visits`);
+        const res = await fetch(`${LEADERBOARD_ENDPOINT}?type=visits&_=${Date.now()}`, { cache: 'no-store' });
         const data = await res.json();
         renderVisitCounter(data.today ?? 0, data.total ?? 0);
       }catch(e){
