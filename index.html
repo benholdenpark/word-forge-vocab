@@ -482,6 +482,10 @@
         <button class="btn btn-secondary" id="btnShare">점수 공유</button>
         <button class="btn btn-secondary" id="btnPracticeAgain">새 문제 다시 도전</button>
       </div>
+      <div class="btn-row hidden" id="lessonNavRow" style="margin-bottom:10px;">
+        <button class="btn btn-secondary hidden" id="btnPrevLesson">◀ 이전</button>
+        <button class="btn btn-secondary hidden" id="btnNextLesson">다음 ▶</button>
+      </div>
       <button class="btn btn-ghost" id="btnBackHome">처음으로</button>
     </div>
   </div>
@@ -7948,6 +7952,40 @@
     return `${m}:${String(s).padStart(2,'0')}`;
   }
 
+  function updateLessonNav(){
+    const order = currentLessonOrder();
+    const idx = order.indexOf(state.lesson);
+    const prevKey = idx > 0 ? order[idx - 1] : null;
+    const nextKey = (idx >= 0 && idx < order.length - 1) ? order[idx + 1] : null;
+    const navRow = el('lessonNavRow');
+    const prevBtn = el('btnPrevLesson');
+    const nextBtn = el('btnNextLesson');
+    if(prevKey){
+      prevBtn.textContent = `◀ ${lessonLabel(prevKey)}`;
+      prevBtn.classList.remove('hidden');
+      prevBtn.dataset.lessonKey = prevKey;
+    } else {
+      prevBtn.classList.add('hidden');
+      delete prevBtn.dataset.lessonKey;
+    }
+    if(nextKey){
+      nextBtn.textContent = `${lessonLabel(nextKey)} ▶`;
+      nextBtn.classList.remove('hidden');
+      nextBtn.dataset.lessonKey = nextKey;
+    } else {
+      nextBtn.classList.add('hidden');
+      delete nextBtn.dataset.lessonKey;
+    }
+    navRow.classList.toggle('hidden', !prevKey && !nextKey);
+  }
+
+  function goToAdjacentLesson(key){
+    if(!key) return;
+    selectedLesson = key;
+    localStorage.setItem(LESSON_KEY, key);
+    startGame(state.mode);
+  }
+
   function endGame(completedAll){
     if(state.timerId) clearInterval(state.timerId);
     if(state.stopwatchId) clearInterval(state.stopwatchId);
@@ -7980,6 +8018,7 @@
     el('resultSub').textContent = `${lessonLabel(state.lesson)} · ${diffLabel} · ${state.solvedCount} / ${state.words.length}개 단어 완성`;
     el('resultScore').textContent = `${state.score} pts`;
     el('resultTime').textContent = `완료 시간: ${formatElapsed(state.elapsedMs)}`;
+    updateLessonNav();
     el('playerName').value = '';
     el('btnSubmitScore').disabled = false;
     el('btnSubmitScore').textContent = '순위 등록';
@@ -8284,6 +8323,8 @@
 
   el('btnShare').addEventListener('click', shareScore);
   el('btnPracticeAgain').addEventListener('click', ()=>startGame('practice'));
+  el('btnPrevLesson').addEventListener('click', ()=>goToAdjacentLesson(el('btnPrevLesson').dataset.lessonKey));
+  el('btnNextLesson').addEventListener('click', ()=>goToAdjacentLesson(el('btnNextLesson').dataset.lessonKey));
   el('btnBackHome').addEventListener('click', ()=>{
     screenEnd.classList.add('hidden');
     screenStart.classList.remove('hidden');
