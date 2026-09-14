@@ -4548,7 +4548,7 @@
       }
     },
     "2026년 3월": {
-      label: "2026년 3월",
+      label: "2026년 3월 학력평가",
       accent: "amber",
       schoolLevel: "high",
       gradeOrder: ["고1", "고2", "고3"],
@@ -5990,11 +5990,15 @@
     if(chosen) switchBtn.textContent = `${chosen.label} 선택됨 · 바꾸기`;
   }
 
-  el('btnSchoolLevelSwitch').addEventListener('click', ()=>{
+  function resetSchoolLevel(){
+    if(!schoolLevel) return false;
     schoolLevel = null;
     applySchoolLevelVisibility();
     renderSchoolLevelTabs();
-  });
+    return true;
+  }
+
+  el('btnSchoolLevelSwitch').addEventListener('click', resetSchoolLevel);
 
   function renderPublisherTabs(){
     const sel = el('publisherTabs');
@@ -6117,7 +6121,7 @@
       const words = lessons[key] || [];
       const btn = document.createElement('button');
       btn.className = 'lesson-tab' + (key === selectedLesson ? ' active' : '');
-      btn.innerHTML = `<span class="name">${key === selectedLesson ? '✓ ' : ''}Lesson ${key}</span><span class="count">${words.length}개</span>`;
+      btn.innerHTML = `<span class="name">${key === selectedLesson ? '✓ ' : ''}${key}번</span><span class="count">${words.length}개</span>`;
       btn.addEventListener('click', ()=>{
         selectedLesson = key;
         localStorage.setItem(LESSON_KEY, key);
@@ -6170,7 +6174,7 @@
     const empty = total === 0;
     el('btnPlay').disabled = empty;
     el('btnRelax').disabled = empty;
-    if(empty && selectedLesson) showToast(`Lesson ${selectedLesson}에는 아직 단어가 없어요`);
+    if(empty && selectedLesson) showToast(`${selectedLesson}번에는 아직 단어가 없어요`);
   }
 
   el('stepDown').addEventListener('click', ()=>{
@@ -6200,7 +6204,7 @@
     if(gameMode === 'quiz'){ startQuizGame(mode); return; }
     const pool = currentLessonWords();
     if(pool.length === 0){
-      showToast(`Lesson ${selectedLesson}에는 아직 단어가 없어요`);
+      showToast(`${selectedLesson}번에는 아직 단어가 없어요`);
       return;
     }
     const roundWords = shuffle(pool).slice(0, effectiveRoundCount(pool.length) || pool.length);
@@ -6323,7 +6327,7 @@
   function startQuizGame(mode){
     const pool = currentLessonWords();
     if(pool.length === 0){
-      showToast(`Lesson ${selectedLesson}에는 아직 단어가 없어요`);
+      showToast(`${selectedLesson}번에는 아직 단어가 없어요`);
       return;
     }
     if(pool.length < 4){
@@ -6841,7 +6845,7 @@
     el('resultTitle').textContent = completedAll ? '완성!' : '시간 종료';
     const diffEntry = (state.gameMode === 'quiz' ? QUIZ_TYPES : DIFFICULTIES).find(d=>d.key===state.difficulty) || {};
     const diffLabel = diffEntry.label || state.difficulty;
-    el('resultSub').textContent = `Lesson ${state.lesson} · ${diffLabel} · ${state.solvedCount} / ${state.words.length}개 단어 완성`;
+    el('resultSub').textContent = `${state.lesson}번 · ${diffLabel} · ${state.solvedCount} / ${state.words.length}개 단어 완성`;
     el('resultScore').textContent = `${state.score} pts`;
     el('resultTime').textContent = `완료 시간: ${formatElapsed(state.elapsedMs)}`;
     el('playerName').value = '';
@@ -6921,7 +6925,7 @@
   function shareScore(){
     const emojiMap = { clean:'🟧', assisted:'🟨', gaveup:'⬛', unreached:'⬜' };
     const grid = state.resultsGrid.map(s=>emojiMap[s] || '⬛').join('');
-    const text = `단어 대장간 Lesson ${state.lesson} — ${state.solvedCount}/${state.words.length} 완성 🔥\n${grid}\n점수: ${state.score}pts`;
+    const text = `단어 대장간 ${state.lesson}번 — ${state.solvedCount}/${state.words.length} 완성 🔥\n${grid}\n점수: ${state.score}pts`;
     if(navigator.share){
       navigator.share({ text }).catch(()=>{});
     } else if(navigator.clipboard){
@@ -6946,7 +6950,7 @@
       const d = new Date(h.date);
       const row = document.createElement('div');
       row.className = 'history-row';
-      row.innerHTML = `<span class="history-date">Lesson ${h.lesson} · ${d.toLocaleDateString('ko-KR')} ${d.toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})}</span><span class="history-stat">${h.solved}/${h.total} · ${h.score}pts${h.elapsedMs != null ? ' · ' + formatElapsed(h.elapsedMs) : ''}</span>`;
+      row.innerHTML = `<span class="history-date">${h.lesson}번 · ${d.toLocaleDateString('ko-KR')} ${d.toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})}</span><span class="history-stat">${h.solved}/${h.total} · ${h.score}pts${h.elapsedMs != null ? ' · ' + formatElapsed(h.elapsedMs) : ''}</span>`;
       list.appendChild(row);
     });
   }
@@ -7040,7 +7044,7 @@
       const dateStr = d ? `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}` : '';
       const pct = Math.round(r.accuracy * 100);
       const avgSec = isFinite(r.avgMsPerWord) ? (r.avgMsPerWord/1000).toFixed(1) : '—';
-      row.innerHTML = `<span class="history-date">${i+1}위 · ${r.name || '익명'} · Lesson ${r.lesson}${dateStr ? ' · ' + dateStr : ''}</span><span class="history-stat">${pct}% (${r.solved}/${r.total}) · 단어당 ${avgSec}초 · ${r.score}pts</span>`;
+      row.innerHTML = `<span class="history-date">${i+1}위 · ${r.name || '익명'} · ${r.lesson}번${dateStr ? ' · ' + dateStr : ''}</span><span class="history-stat">${pct}% (${r.solved}/${r.total}) · 단어당 ${avgSec}초 · ${r.score}pts</span>`;
       list.appendChild(row);
     });
   }
@@ -7154,14 +7158,29 @@
   });
 
   document.addEventListener('keydown', (e)=>{
-    if(screenGame.classList.contains('hidden') || !state) return;
     if(e.key === 'Backspace'){
-      const lastFilled = [...state.slots].reverse().find(s=>s.value !== null);
-      if(lastFilled) removeSlotBack(lastFilled);
+      const tag = (document.activeElement && document.activeElement.tagName) || '';
+      const isTextField = tag === 'INPUT' || tag === 'TEXTAREA' || (document.activeElement && document.activeElement.isContentEditable);
+      if(isTextField) return; // 입력창에 포커스가 있으면 원래대로 글자 지우기 동작
+
+      // 글자 조합 게임 중이면: 마지막 글자 슬롯 지우기
+      if(!screenGame.classList.contains('hidden') && state){
+        const lastFilled = [...state.slots].reverse().find(s=>s.value !== null);
+        if(lastFilled) removeSlotBack(lastFilled);
+        e.preventDefault();
+        return;
+      }
+
+      // 그 외 화면(설정 화면 등)에서는 브라우저/기기의 "뒤로 가기"로 페이지를 벗어나지 않도록 막고,
+      // 학교급이 선택되어 있으면 학교급 선택 화면으로만 되돌아가게 함
+      // (일부 태블릿/기기의 시스템 뒤로 가기 버튼이 Backspace 키 입력으로 전달되는 경우가 있어,
+      //  이걸 막지 않으면 페이지 자체가 이전 방문 기록으로 이동해 학교급 선택이 꼬이는 문제가 있었음)
       e.preventDefault();
+      resetSchoolLevel();
       return;
     }
     if(/^[a-zA-Z]$/.test(e.key)){
+      if(screenGame.classList.contains('hidden') || !state) return;
       const letter = e.key.toLowerCase();
       const tile = state.tiles.find(t=>!t.used && t.letter.toLowerCase() === letter);
       if(tile) placeTile(tile.id);
