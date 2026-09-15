@@ -10795,7 +10795,7 @@
       resetSchoolLevel();
       return;
     }
-    if(/^[a-zA-Z]$/.test(e.key)){
+    if(/^[a-zA-Z-]$/.test(e.key)){
       if(screenGame.classList.contains('hidden') || !state) return;
       const letter = e.key.toLowerCase();
       const tile = state.tiles.find(t=>!t.used && t.letter.toLowerCase() === letter);
