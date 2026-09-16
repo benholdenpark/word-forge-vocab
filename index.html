@@ -9461,6 +9461,7 @@
   let selectedGrade = null;
   let selectedLesson = localStorage.getItem(LESSON_KEY);
   function lessonLabel(key){
+    if(schoolLevel === 'middle') return `Lesson ${key}`;
     return key === '전체' ? '전체' : `${key}번`;
   }
 
