@@ -13991,6 +13991,7 @@
 
     if(chosen.correct){
       playCorrectSound();
+      speakWord(q.entry.word);
       const status = q.usedAssist ? 'assisted' : 'clean';
       state.resultsGrid.push(status);
       if(status === 'assisted') state.missed.push(q.entry);
@@ -14234,6 +14235,17 @@
     playTone(160, 0.16, 'square', 0.08, 0.10);
   }
 
+  function speakWord(text){
+    if(!('speechSynthesis' in window) || !text) return;
+    try{
+      window.speechSynthesis.cancel();
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.lang = 'en-US';
+      utter.rate = 0.9;
+      window.speechSynthesis.speak(utter);
+    }catch(e){ /* speech synthesis unavailable — fail silently */ }
+  }
+
   function checkAnswer(){
     const assembled = state.slots.map(s=>s.value).join('').toLowerCase();
     const entry = state.words[state.wordIdx];
@@ -14242,6 +14254,7 @@
     if(assembled === target){
       wrap.classList.add('correct');
       playCorrectSound();
+      speakWord(entry.word);
       const status = (state.revealsUsedThisWord === 0) ? 'clean' : 'assisted';
       state.resultsGrid.push(status);
       if(status === 'assisted') state.missed.push(entry);
